@@ -17,7 +17,7 @@ static QHash<int, QHash<double, double>> coeficientesSigma;
 
 distanThread::distanThread(QObject *parent) :
     QThread(parent)
-{    
+{
     ObjLoc = false;
     Vuelo=0;
     fichero="";
@@ -31,7 +31,7 @@ distanThread::distanThread(QObject *parent) :
     alcance = false;
     sigmaSeleccionado = 1.0;   // Por defecto: lectura normal
     tipoOnda = "";             // Por defecto: sin tipo de onda
-    
+
     inicializarCoeficientesSigma();
 }
 distanThread::~distanThread()
@@ -117,20 +117,20 @@ void distanThread::calcDistancia()
     emit progreso(0, "Calculando datos para " + QString::number(Vuelo) +
                   "m. Esta operación puede tardar unos minutos");
 
-    
+
     if(!leer())
     {
         tangente(calculos->angulositio);
-        
+
         double AltuCurva=0;
         double Alpos = calculos->datoterrenoMiPos.altura;
-        
+
         double posicion = Alpos + calculos->AlAnt;
         double curva=0;
         double recta=0;
         double recta1=0;
         double recta2=0;
-        
+
         if(calculos->medio != 50)
         {
             if(Vuelo >= 0 && Vuelo <= 1000)//100 a 2000
@@ -170,15 +170,15 @@ void distanThread::calcDistancia()
         }
         if(calculos->medio == 41 && Disvuelo > 180000)
             Disvuelo = 180000;
-        
+
         if(!ObjLoc)
             if(Disvuelo < distanciamax)
             {
                 distanciamax = Disvuelo;
             }
-        
+
         disMax.append (distanciamax);//0.5
-        
+
         double disaux = 0;
         disaux = distanciamax*0.68630039*1.35;
         disMax.append (disaux);//0.6
@@ -195,7 +195,7 @@ void distanThread::calcDistancia()
             LPinterceptosAS1.clear();
             LPinterceptosAS2.clear();
             LPinterceptosRecta.clear();
-            
+
             int d = 0;
             if(!detener)
             {
@@ -203,17 +203,17 @@ void distanThread::calcDistancia()
                 detener=true;
                 return;
             }
-            
-            
+
+
             emit progreso(a,"Calculando datos para "+ QString::number(Vuelo)+"m. Esta operación puede tardar unos minutos");
-            
+
             QList<CDatoTerreno*> *datosterreno = &calculos->DatosAzimut[a].datosterreno;
             QList<double> datosCurva;
             QList<double> datosRecta;
-            
+
             QList<double> datosRectaASitio1;//datos de la recta  de angulo de sitio 1
             QList<double> datosRectaASitio2;//datos de la recta  de angulo de sitio -1
-            
+
             int ac = 0;
             int length = calculos->DatosAzimut[a].datosAngulosCierre.length();//tamano de la lista de angulos de cierre(picos maximos)
             double dlimt = 0;
@@ -266,7 +266,7 @@ void distanThread::calcDistancia()
                         //tan -3 == -0.052407779
                         recta1 = -0.052407779 *d +posicion;
                         datosRectaASitio1.append(recta1);
-                        
+
                     }
                     if(calculos->medio == 38 && calculos->grupo == 1 )
                     {
@@ -274,19 +274,19 @@ void distanThread::calcDistancia()
                         recta1 = -0.034920769 *d +posicion;
                         datosRectaASitio1.append(recta1);
                     }
-                    
+
                 }
                 datosRecta.append(recta);
                 d+=90;
             }
-            
+
             if(calculos->medio == 41 || calculos->medio == 48)
             {
                 muis = true;
-                
+
                 LPinterceptosAS1 = Pointinterceptos (false,a,datosCurva,datosRectaASitio1);
                 LPinterceptosAS2 = Pointinterceptos (false,a,datosCurva,datosRectaASitio2);
-                
+
                 if(!LPinterceptosAS1.isEmpty () && Vuelo == 0)
                     disInternas[a].append (LPinterceptosAS1.first ().x ());
             }
@@ -295,16 +295,16 @@ void distanThread::calcDistancia()
                 ZonaMuertaMuis[a].append(0);
                 LPinterceptosAS1 = Pointinterceptos (false,a,datosCurva,datosRectaASitio1);
             }
-            
+
             else
             {
                 ZonaMuertaMuis[a].append(0);
                 ZonaMuertaMuis2[a].append(0);
             }
             muis = false;
-            
+
             LPinterceptosRecta .append (Pointinterceptos (true,a,datosCurva,datosRecta));
-            
+
             if(!LPinterceptosRecta.isEmpty ())
                 LPinterceptosRecta = listaPuntos(LPinterceptosRecta);//ordenar lista de puntos por distancias
             /*m41 48*/
@@ -316,8 +316,8 @@ void distanThread::calcDistancia()
                         ZonaMuertaMuis[a].append (LPinterceptosAS1.first ().x ());
                     if(!LPinterceptosAS2.isEmpty ())
                         ZonaMuertaMuis2[a].append (LPinterceptosAS2.first ().x ());
-                    
-                    
+
+
                     if(LPinterceptosAS2.isEmpty())
                     {
                         LPinterceptosRecta.clear();
@@ -335,22 +335,22 @@ void distanThread::calcDistancia()
                         double A2x = datosRectaASitio1.length()*90;
                         double A3x = datosRectaASitio2.length()*90;
                         double A3y = datosRectaASitio2.last();
-                        
+
                         for (int i = 0; i < LPinterceptosRecta.length(); ++i)
                         {
                             if(LPinterceptosRecta.at (i).x () <= distanciamax)
                             {
                                 double px = LPinterceptosRecta.at(i).x();
                                 double py = LPinterceptosRecta.at(i).y();
-                                
+
                                 o = (A1x-A3x)*(A2y-A3y)-(A1y-A3y)*(A2x-A3x);
-                                
+
                                 o1 = (A1x-px)*(A2y-py)-(A1y-py)*(A2x-px);
-                                
+
                                 o2 = (A2x-px)*(A3y-py)-(A2y-py)*(A3x-px);
-                                
+
                                 o3 = (A3x-px)*(A1y-py)-(A3y-py)*(A1x-px);
-                                
+
                                 if(o<0)
                                 {
                                     if(o1<0 && o2<0 && o3<0)//adentro
@@ -396,7 +396,7 @@ void distanThread::calcDistancia()
                                 }
                                 if(disVDirecta[a].isEmpty ())
                                     disVDirecta[a].append (0);
-                                
+
                             }
                         }
                         //                            }
@@ -421,22 +421,22 @@ void distanThread::calcDistancia()
                         double A2x = datosRectaASitio1.length()*90;
                         double A3x = datosRectaASitio2.length()*90;
                         double A3y = datosRectaASitio2.last();
-                        
+
                         for (int i = 0; i < LPinterceptosRecta.length(); ++i)
                         {
                             if(i < LPinterceptosRecta.length()-1)
                             {
                                 double px = LPinterceptosRecta.at(i).x();
                                 double py = LPinterceptosRecta.at(i).y();
-                                
+
                                 o = (A1x-A3x)*(A2y-A3y)-(A1y-A3y)*(A2x-A3x);
-                                
+
                                 o1 = (A1x-px)*(A2y-py)-(A1y-py)*(A2x-px);
-                                
+
                                 o2 = (A2x-px)*(A3y-py)-(A2y-py)*(A3x-px);
-                                
+
                                 o3 = (A3x-px)*(A1y-py)-(A3y-py)*(A1x-px);
-                                
+
                                 if(o<0)
                                 {
                                     if(o1<0 && o2<0 && o3<0)
@@ -444,7 +444,7 @@ void distanThread::calcDistancia()
                                         // qDebug()<<a<<"adentro";
                                         if( LPinterceptosRecta.at(i).x () < distanciamax )
                                             disInternas[a].append(LPinterceptosRecta.at(i).x ());
-                                        
+
                                     }
                                     else
                                     {
@@ -467,15 +467,15 @@ void distanThread::calcDistancia()
                             {
                                 double px = LPinterceptosRecta.at(i).x();
                                 double py = LPinterceptosRecta.at(i).y();
-                                
+
                                 o = (A1x-A3x)*(A2y-A3y)-(A1y-A3y)*(A2x-A3x);
-                                
+
                                 o1 = (A1x-px)*(A2y-py)-(A1y-py)*(A2x-px);
-                                
+
                                 o2 = (A2x-px)*(A3y-py)-(A2y-py)*(A3x-px);
-                                
+
                                 o3 = (A3x-px)*(A1y-py)-(A3y-py)*(A1x-px);
-                                
+
                                 if(o<0)
                                 {
                                     if(o1<0 && o2<0 && o3<0)
@@ -501,7 +501,7 @@ void distanThread::calcDistancia()
                                                     {
                                                         disVDirecta[a].append (LPinterceptosRecta.last().x ());
                                                     }
-                                                    
+
                                                 }
                                                 else
                                                 {
@@ -561,7 +561,7 @@ void distanThread::calcDistancia()
                                                     {
                                                         disVDirecta[a].append (LPinterceptosRecta.last().x ());
                                                     }
-                                                    
+
                                                 }
                                                 else
                                                 {
@@ -654,7 +654,7 @@ void distanThread::calcDistancia()
             else
                 /*m otros*/{
                 double disaux = distanciamax;
-                
+
                 if(Vuelo==0)
                 {
                     if (LPinterceptosRecta.isEmpty ())
@@ -775,14 +775,14 @@ void distanThread::calcDistancia()
                                 {
                                     disVDirecta[a].append(disaux/*LPinterceptosRecta.at(i).x ()*/);
                                 }
-                                
-                                
+
+
                                 break;
                             }
                         }
                         else
                         {
-                            
+
                             if(LPinterceptosRecta.last ().x ()< disaux)
                             {
                                 if(datosCurva.at (ciclo-1) > datosRecta.at (ciclo-1))
@@ -858,7 +858,7 @@ void distanThread::calcDistancia()
         }
         guardar ();
         guarda = true;
-        
+
         // === BLOQUE SIGMA ===
         bool medioRequiereSigma = (calculos->medio == 36 || calculos->medio == 38 ||
                                    calculos->medio == 39 || calculos->medio == 40 ||
@@ -896,11 +896,11 @@ QList<QPointF> distanThread::Pointinterceptos(bool recttierra,int a, QList<doubl
     QList<double> interceptos;
     QList<QPointF> LPinterceptos;
     QPointF p;
-    
+
     double cu=0;
     double re=0;
     double mod=0;
-    
+
     double auxre = 0;
     double auxcu = 0;
     double auxre1 = 0;
@@ -912,7 +912,7 @@ QList<QPointF> distanThread::Pointinterceptos(bool recttierra,int a, QList<doubl
     double dist = 0;
     char Signo = '+';
     char Signo2 = '+';
-    
+
     bool tan = true;
     if(Vuelo > 0)
     {
@@ -929,7 +929,7 @@ QList<QPointF> distanThread::Pointinterceptos(bool recttierra,int a, QList<doubl
                     auxcu=cu;
                     auxre1=datosRecta[j-1];
                     auxcu1=datosCurva[j-1];
-                    
+
                     mre=(auxre-auxre1)/90;
                     mcu=(auxcu-auxcu1)/90;
                     for(double x=0;x<=90;x+=0.0001)
@@ -957,7 +957,7 @@ QList<QPointF> distanThread::Pointinterceptos(bool recttierra,int a, QList<doubl
                     auxcu=cu;
                     auxre1=datosRecta[j-1];
                     auxcu1=datosCurva[j-1];
-                    
+
                     mre=(auxre-auxre1)/90;
                     mcu=(auxcu-auxcu1)/90;
                     for(double x=0;x<=90;x+=0.0001)
@@ -985,7 +985,7 @@ QList<QPointF> distanThread::Pointinterceptos(bool recttierra,int a, QList<doubl
                     auxcu=cu;
                     auxre1=datosRecta[j-1];
                     auxcu1=datosCurva[j-1];
-                    
+
                     mre=(auxre-auxre1)/90;
                     mcu=(auxcu-auxcu1)/90;
                     for(double x=0;x<=90;x+=0.0001)
@@ -1009,7 +1009,7 @@ QList<QPointF> distanThread::Pointinterceptos(bool recttierra,int a, QList<doubl
                     auxcu=cu;
                     auxre1=datosRecta[j-1];
                     auxcu1=datosCurva[j-1];
-                    
+
                     mre=(auxre-auxre1)/90;
                     mcu=(auxcu-auxcu1)/90;
                     for(double x=0;x<=90;x+=0.0001)
@@ -1032,7 +1032,7 @@ QList<QPointF> distanThread::Pointinterceptos(bool recttierra,int a, QList<doubl
     }
     else
     {//revisar cuando altura es 0
-        
+
         //      if(!muis)
         //        {
         if(recttierra)
@@ -1076,7 +1076,7 @@ QList<QPointF> distanThread::Pointinterceptos(bool recttierra,int a, QList<doubl
                     auxcu=cu;
                     auxre1=datosRecta[j-1];
                     auxcu1=datosCurva[j-1];
-                    
+
                     mre=(auxre-auxre1)/90;
                     mcu=(auxcu-auxcu1)/90;
                     for(double x=0;x<=90;x+=0.0001)
@@ -1094,7 +1094,7 @@ QList<QPointF> distanThread::Pointinterceptos(bool recttierra,int a, QList<doubl
                                 LPinterceptos.append(p);
                                 break;
                             }
-                            
+
                             tan = false;
                         }
                     }
@@ -1110,7 +1110,7 @@ QList<QPointF> distanThread::Pointinterceptos(bool recttierra,int a, QList<doubl
                     auxcu=cu;
                     auxre1=datosRecta[j-1];
                     auxcu1=datosCurva[j-1];
-                    
+
                     mre=(auxre-auxre1)/90;
                     mcu=(auxcu-auxcu1)/90;
                     for(double x=0;x<=90;x+=0.0001)
@@ -1120,7 +1120,7 @@ QList<QPointF> distanThread::Pointinterceptos(bool recttierra,int a, QList<doubl
                         if (yre<=ycu)
                         {
                             dist=(j-1)*90+(x);
-                            
+
                             if(!interceptos.contains(dist))
                             {
                                 interceptos.append(dist);
@@ -1129,7 +1129,7 @@ QList<QPointF> distanThread::Pointinterceptos(bool recttierra,int a, QList<doubl
                                 LPinterceptos.append(p);
                                 break;
                             }
-                            
+
                             tan = false;
                         }
                     }
@@ -1139,13 +1139,13 @@ QList<QPointF> distanThread::Pointinterceptos(bool recttierra,int a, QList<doubl
             }
         }
     }
-    
+
     return LPinterceptos;
 }
 
 QList<QPointF> distanThread::listaPuntos(QList<QPointF> ListaPuntos)//ordena
 {
-    
+
     for (int i = 0; i < ListaPuntos.length (); ++i)
     {
         for (int j = 0; j < ListaPuntos.length (); ++j)
@@ -1178,13 +1178,13 @@ void distanThread::guardar()
     }
     QFile f(QDir::currentPath() + "/Zonas/"+auxF);
     qDebug()<<"guardar hilo"<<fichero;
-    
+
     //    creaTablaBaseDatos(auxF.replace(".","_"));
     QTextStream out(&f);
-    
-    if(!f.open(QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text))
+
+    if(!f.open(QIODevice::WriteOnly | QIODevice::Text))
         qFatal("No puedo abrir el fichero para escritura.");
-    
+
     double coox = 0;
     double cooy = 0;
     double disaux = 0;
@@ -1193,7 +1193,7 @@ void distanThread::guardar()
     for (int a = 0; a < 360; a++)
     {
         emit progreso(a,"Guardando datos. Esta operación puede tardar unos minutos");
-        
+
         listdisaux.clear ();
         if(disVDirecta[a].at (0)/1000 <= 320)
         {
@@ -1207,17 +1207,17 @@ void distanThread::guardar()
         }
         out << coox << "," << cooy << ",*" << disVDirecta[a].at(0);
         qDebug() <<a<< coox << "," << cooy << ",*" << disVDirecta[a].at(0);
-        
-        
+
+
         for (double i : disInternas[a])
         {
             out << "," << i;
             qDebug() << "," << i;
-            
+
         }
         out << "*";
         qDebug() << "*";
-        
+
         /***********ZonaMuerta*************/
         if(calculos->medio != 0 && calculos->medio != 11 && calculos->medio != 12 && calculos->medio != 13 && calculos->medio != 40)
         {
@@ -1225,7 +1225,7 @@ void distanThread::guardar()
             {
                 out<< ZonaMuertaMuis[a].at(0);
                 qDebug()<< ZonaMuertaMuis[a].at(0);
-                
+
                 if(ZonaMuertaMuis[a].length()>1)
                 {
                     for (int i = 1; i < ZonaMuertaMuis[a].length(); ++i)
@@ -1243,13 +1243,13 @@ void distanThread::guardar()
             }
             out << "*";
             qDebug() << "*";
-            
-            
+
+
             if(ZonaMuertaMuis2[a].length()>=1)
             {
                 out <<ZonaMuertaMuis2[a].at(0);
                 qDebug() <<ZonaMuertaMuis2[a].at(0);
-                
+
                 if(ZonaMuertaMuis2[a].length()>1)
                 {
                     for (int i = 1; i < ZonaMuertaMuis2[a].length(); ++i)
@@ -1272,7 +1272,7 @@ void distanThread::guardar()
         {
             out << "*";
             qDebug() << "*";
-            
+
             for (int i = 0; i < disInternas[a].length(); i++)
             {
                 if((i)%2 == 0)
@@ -1285,7 +1285,7 @@ void distanThread::guardar()
                     }
                 }
             }
-            
+
             disaux = disVDirecta[a].at (0);
             listdisaux.append (disaux);
             if(disaux > disMax.at (1))//06
@@ -1312,7 +1312,7 @@ void distanThread::guardar()
                 qDebug() << disaux<<"*";
                 listdisaux.append (disaux);
             }
-            
+
             if(disaux > disMax.at (3))//08
             {
                 out << disMax.at (3)<<"*";
@@ -1355,11 +1355,11 @@ void distanThread::guardar()
                     if(comprobarECC(tiempo,Vuelo,disVDirecta[a].at (0)))//comprobando la visibilidad directa minima para el tiro
                     {
                         estDistanMinMax();
-                        
+
                         double disLanza = 0.0;
                         double dzdr = 0.0;
                         QList<double> disZDR;
-                        
+
                         if(listdisaux.at (0) > DRCmin)//comprobar si la dvd es mayor q la destruccion min
                         {
                             if(listdisaux.at (0) > DRCmax)//comprobar si la dvd es mayor q la destruccion max
@@ -1375,7 +1375,7 @@ void distanThread::guardar()
                                     dzdr = disLanza * velocidadCohete / (0.96 * velocidadCohete - velocidad);
                                     double aux = dzdr;
                                     comprobarDlanzaSegmentosNV(&aux,a);//disDestr fuera de segmentos
-                                    
+
                                     if(aux <= disLanza)
                                     {
                                         disLanza = disLanza - (dzdr - aux);
@@ -1387,7 +1387,7 @@ void distanThread::guardar()
                                         }
                                     }
                                     dzdr = aux ;
-                                    
+
                                     if(dzdr <= DRCmin )
                                     {
                                         disLanza = 0;
@@ -1414,7 +1414,7 @@ void distanThread::guardar()
                                     dzdr = disLanza * velocidadCohete / (0.96 * velocidadCohete - velocidad);
                                     double aux = dzdr;
                                     comprobarDlanzaSegmentosNV(&aux,a);//disDestr fuera de segmentos
-                                    
+
                                     if(aux <= disLanza)
                                     {
                                         disLanza = disLanza - (dzdr - aux);
@@ -1426,7 +1426,7 @@ void distanThread::guardar()
                                         }
                                     }
                                     dzdr = aux ;
-                                    
+
                                     if(dzdr <= DRCmin )
                                     {
                                         disLanza = 0;
@@ -1456,7 +1456,7 @@ void distanThread::guardar()
                                 disVDirecta[a].append (disLanza);
                             out <<disLanza<<"*";
                         }
-                        
+
                         if(listdisaux.at (1) > DRCmin)//comprobar si la dvd es mayor q la destruccion min
                         {
                             if(listdisaux.at (1) > DRCmax)//comprobar si la dvd es mayor q la destruccion max
@@ -1472,7 +1472,7 @@ void distanThread::guardar()
                                     dzdr = disLanza * velocidadCohete / (0.96 * velocidadCohete - velocidad);
                                     double aux = dzdr;
                                     comprobarDlanzaSegmentosNV(&aux,a);//disDestr fuera de segmentos
-                                    
+
                                     if(aux <= disLanza)
                                     {
                                         disLanza = disLanza - (dzdr - aux);
@@ -1484,7 +1484,7 @@ void distanThread::guardar()
                                         }
                                     }
                                     dzdr = aux ;
-                                    
+
                                     if(dzdr <= DRCmin )
                                     {
                                         disLanza = 0;
@@ -1511,7 +1511,7 @@ void distanThread::guardar()
                                     dzdr = disLanza * velocidadCohete / (0.96 * velocidadCohete - velocidad);
                                     double aux = dzdr;
                                     comprobarDlanzaSegmentosNV(&aux,a);//disDestr fuera de segmentos
-                                    
+
                                     if(aux <= disLanza)
                                     {
                                         disLanza = disLanza - (dzdr - aux);
@@ -1523,7 +1523,7 @@ void distanThread::guardar()
                                         }
                                     }
                                     dzdr = aux ;
-                                    
+
                                     if(dzdr <= DRCmin )
                                     {
                                         disLanza = 0;
@@ -1553,7 +1553,7 @@ void distanThread::guardar()
                                 disVDirecta[a].append (disLanza);
                             out <<disLanza<<"*";
                         }
-                        
+
                         if(listdisaux.at (2) > DRCmin)//comprobar si la dvd es mayor q la destruccion min
                         {
                             if(listdisaux.at (2) > DRCmax)//comprobar si la dvd es mayor q la destruccion max
@@ -1569,7 +1569,7 @@ void distanThread::guardar()
                                     dzdr = disLanza * velocidadCohete / (0.96 * velocidadCohete - velocidad);
                                     double aux = dzdr;
                                     comprobarDlanzaSegmentosNV(&aux,a);//disDestr fuera de segmentos
-                                    
+
                                     if(aux <= disLanza)
                                     {
                                         disLanza = disLanza - (dzdr - aux);
@@ -1581,7 +1581,7 @@ void distanThread::guardar()
                                         }
                                     }
                                     dzdr = aux ;
-                                    
+
                                     if(dzdr <= DRCmin )
                                     {
                                         disLanza = 0;
@@ -1608,7 +1608,7 @@ void distanThread::guardar()
                                     dzdr = disLanza * velocidadCohete / (0.96 * velocidadCohete - velocidad);
                                     double aux = dzdr;
                                     comprobarDlanzaSegmentosNV(&aux,a);//disDestr fuera de segmentos
-                                    
+
                                     if(aux <= disLanza)
                                     {
                                         disLanza = disLanza - (dzdr - aux);
@@ -1620,7 +1620,7 @@ void distanThread::guardar()
                                         }
                                     }
                                     dzdr = aux ;
-                                    
+
                                     if(dzdr <= DRCmin )
                                     {
                                         disLanza = 0;
@@ -1650,7 +1650,7 @@ void distanThread::guardar()
                                 disVDirecta[a].append (disLanza);
                             out <<disLanza<<"*";
                         }
-                        
+
                         if(listdisaux.at (3) > DRCmin)//comprobar si la dvd es mayor q la destruccion min
                         {
                             if(listdisaux.at (3) > DRCmax)//comprobar si la dvd es mayor q la destruccion max
@@ -1666,7 +1666,7 @@ void distanThread::guardar()
                                     dzdr = disLanza * velocidadCohete / (0.96 * velocidadCohete - velocidad);
                                     double aux = dzdr;
                                     comprobarDlanzaSegmentosNV(&aux,a);//disDestr fuera de segmentos
-                                    
+
                                     if(aux <= disLanza)
                                     {
                                         disLanza = disLanza - (dzdr - aux);
@@ -1678,7 +1678,7 @@ void distanThread::guardar()
                                         }
                                     }
                                     dzdr = aux ;
-                                    
+
                                     if(dzdr <= DRCmin )
                                     {
                                         disLanza = 0;
@@ -1705,7 +1705,7 @@ void distanThread::guardar()
                                     dzdr = disLanza * velocidadCohete / (0.96 * velocidadCohete - velocidad);
                                     double aux = dzdr;
                                     comprobarDlanzaSegmentosNV(&aux,a);//disDestr fuera de segmentos
-                                    
+
                                     if(aux <= disLanza)
                                     {
                                         disLanza = disLanza - (dzdr - aux);
@@ -1717,7 +1717,7 @@ void distanThread::guardar()
                                         }
                                     }
                                     dzdr = aux ;
-                                    
+
                                     if(dzdr <= DRCmin )
                                     {
                                         disLanza = 0;
@@ -1747,7 +1747,7 @@ void distanThread::guardar()
                                 disVDirecta[a].append (disLanza);
                             out <<disLanza<<"*";
                         }
-                        
+
                         if(listdisaux.at (4) > DRCmin)//comprobar si la dvd es mayor q la destruccion min
                         {
                             if(listdisaux.at (4) > DRCmax)//comprobar si la dvd es mayor q la destruccion max
@@ -1763,7 +1763,7 @@ void distanThread::guardar()
                                     dzdr = disLanza * velocidadCohete / (0.96 * velocidadCohete - velocidad);
                                     double aux = dzdr;
                                     comprobarDlanzaSegmentosNV(&aux,a);//disDestr fuera de segmentos
-                                    
+
                                     if(aux <= disLanza)
                                     {
                                         disLanza = disLanza - (dzdr - aux);
@@ -1775,7 +1775,7 @@ void distanThread::guardar()
                                         }
                                     }
                                     dzdr = aux ;
-                                    
+
                                     if(dzdr <= DRCmin )
                                     {
                                         disLanza = 0;
@@ -1802,7 +1802,7 @@ void distanThread::guardar()
                                     dzdr = disLanza * velocidadCohete / (0.96 * velocidadCohete - velocidad);
                                     double aux = dzdr;
                                     comprobarDlanzaSegmentosNV(&aux,a);//disDestr fuera de segmentos
-                                    
+
                                     if(aux <= disLanza)
                                     {
                                         disLanza = disLanza - (dzdr - aux);
@@ -1814,7 +1814,7 @@ void distanThread::guardar()
                                         }
                                     }
                                     dzdr = aux ;
-                                    
+
                                     if(dzdr <= DRCmin )
                                     {
                                         disLanza = 0;
@@ -1844,28 +1844,28 @@ void distanThread::guardar()
                                 disVDirecta[a].append (disLanza);
                             out <<disLanza<<"*";
                         }
-                        
+
                         disVDirecta[a].append(disZDR.at (probabilidad));
-                        
+
                         QGeoCoordinate geo;
                         LatOR = calculos->datoterrenoMiPos.LatOR;
                         LonOR = calculos->datoterrenoMiPos.LonOR;
-                        
+
                         geoPos.setLatitude (calculos->datoterrenoMiPos.LatOR);
                         geoPos.setLongitude (calculos->datoterrenoMiPos.LonOR);
-                        
+
                         geo =  geoPos.atDistanceAndAzimuth (disZDR[0],a,0.0);
-                        
+
                         LatOR = geo.latitude ();
                         LonOR = geo.longitude ();
-                        
+
                         out<< disZDR[0]<<"*";
                         out<< disZDR[1]<<"*";
                         out<< disZDR[2]<<"*";
                         out<< disZDR[3]<<"*";
                         out<< disZDR[4]<<"*";
                         out <<-LonOR<<','<<LatOR<<"*";
-                        
+
                     }
                     else
                     {
@@ -1876,13 +1876,13 @@ void distanThread::guardar()
                         out <<0<<"*";
                         out <<0<<"*";
                         out <<0<<"*";
-                        
+
                         out <<0<<"*";//disZDR
                         out <<0<<"*";
                         out <<0<<"*";
                         out <<0<<"*";
                         out <<0<<"*";
-                        
+
                         out <<-LonOR<<','<<LatOR<<"*";
                     }
                 }
@@ -1895,16 +1895,16 @@ void distanThread::guardar()
                         QList<double> disZDR;
                         disLanza = listdisaux.at (0) - tiempo * velocidad;//0.5
                         calcularDlDzr(&disLanza, &dzdr,  a);
-                        
+
                         disZDR.append (dzdr);
                         if(dzdr == 0)
                             disLanza = 0;
                         if(Vuelo <100)
                             disLanza = 0;
                         out <<disLanza<<"*";
-                        
+
                         disLanza = listdisaux.at (1) - tiempo * velocidad;//0.6
-                        
+
                         calcularDlDzr(&disLanza, &dzdr,  a);
                         disZDR.append (dzdr);
                         if(dzdr == 0)
@@ -1912,9 +1912,9 @@ void distanThread::guardar()
                         if(Vuelo <100)
                             disLanza = 0;
                         out <<disLanza<<"*";
-                        
+
                         disLanza = listdisaux.at (2) - tiempo * velocidad; //0.7
-                        
+
                         calcularDlDzr(&disLanza, &dzdr,  a);
                         disZDR.append (dzdr);
                         if(dzdr == 0)
@@ -1922,9 +1922,9 @@ void distanThread::guardar()
                         if(Vuelo <100)
                             disLanza = 0;
                         out <<disLanza<<"*";
-                        
+
                         disLanza = listdisaux.at (3) - tiempo * velocidad;//0.8
-                        
+
                         calcularDlDzr(&disLanza, &dzdr,  a);
                         disZDR.append (dzdr);
                         if(dzdr == 0)
@@ -1932,9 +1932,9 @@ void distanThread::guardar()
                         if(Vuelo <100)
                             disLanza = 0;
                         out <<disLanza<<"*";
-                        
+
                         disLanza = listdisaux.at (4) - tiempo * velocidad;//0.9
-                        
+
                         calcularDlDzr(&disLanza, &dzdr,  a);
                         disZDR.append (dzdr);
                         if(dzdr == 0)
@@ -1942,7 +1942,7 @@ void distanThread::guardar()
                         if(Vuelo <100)
                             disLanza = 0;
                         out <<disLanza<<"*";
-                        
+
                         if(probabilidad > 0)
                         {
                             disLanza = listdisaux.at (probabilidad) - tiempo * velocidad;
@@ -1951,8 +1951,8 @@ void distanThread::guardar()
                             calcularDlDzr(&disLanza, &dzdr,  a);
                             if(dzdr == 0)
                                 disLanza = 0;
-                            
-                            
+
+
                             disVDirecta[a].append (disLanza);
                         }
                         else
@@ -1966,19 +1966,19 @@ void distanThread::guardar()
                             disVDirecta[a].append (disLanza);
                         }
                         disVDirecta[a].append(disZDR.at (probabilidad));
-                        
+
                         QGeoCoordinate geo;
                         LatOR = calculos->datoterrenoMiPos.LatOR;
                         LonOR = calculos->datoterrenoMiPos.LonOR;
-                        
+
                         geoPos.setLatitude (calculos->datoterrenoMiPos.LatOR);
                         geoPos.setLongitude (calculos->datoterrenoMiPos.LonOR);
-                        
+
                         geo =  geoPos.atDistanceAndAzimuth (disZDR[0],a,0.0);
-                        
+
                         LatOR = geo.latitude ();
                         LonOR = geo.longitude ();
-                        
+
                         if(Vuelo <100)
                         {
                             disZDR[0] = 0;
@@ -1987,14 +1987,14 @@ void distanThread::guardar()
                             disZDR[3] = 0;
                             disZDR[4] = 0;
                         }
-                        
+
                         out<< disZDR[0]<<"*";
                         out<< disZDR[1]<<"*";
                         out<< disZDR[2]<<"*";
                         out<< disZDR[3]<<"*";
                         out<< disZDR[4]<<"*";
                         out <<-LonOR<<','<<LatOR<<"*";
-                        
+
                     }
                     else
                     {
@@ -2005,13 +2005,13 @@ void distanThread::guardar()
                         out <<0<<"*";
                         out <<0<<"*";
                         out <<0<<"*";
-                        
+
                         out <<0<<"*";//disZDR
                         out <<0<<"*";
                         out <<0<<"*";
                         out <<0<<"*";
                         out <<0<<"*";
-                        
+
                         out <<-LonOR<<','<<LatOR<<"*";
                     }
                 }
@@ -2024,11 +2024,11 @@ void distanThread::guardar()
                     if(comprobarECC(tiempo,Vuelo,disVDirecta[a].at (0)))//Dlanz
                     {
                         estDistanMinMax();
-                        
+
                         double disLanza;
                         double dzdr = 0.0;
                         QList<double> disZDR;
-                        
+
                         if(listdisaux.at (0) > DRCmin)//0.5
                         {
                             if(listdisaux.at (0) > DRCmax)
@@ -2048,7 +2048,7 @@ void distanThread::guardar()
                                 case 300:
                                     dzdr = listdisaux.at (0) - 600;
                                     break;
-                                    
+
                                 default:
                                     break;
                                 }
@@ -2057,14 +2057,14 @@ void distanThread::guardar()
                                 comprobarDZDR(&dzdr);
                                 comprobarDlanzaSegmentosNVzm(&dzdr,a);
                             }
-                            
+
                         }
                         else
                         {
                             dzdr = 0;
                         }
                         disZDR.append (dzdr);
-                        
+
                         if(Vuelo <25)
                             disLanza = 0;
                         if(dzdr == 0)
@@ -2077,13 +2077,13 @@ void distanThread::guardar()
                             comprobarDlanzaSegmentosNV(&disLanza,a);
                             comprobarDlanza (&disLanza,disVDirecta[a].at (0));
                             comprobarDlanzaSegmentosNVzm(&disLanza,a);
-                            
+
                         }
-                        
+
                         if(probabilidad  == 0 )
                             disVDirecta[a].append (disLanza);
                         out <<disLanza<<"*";
-                        
+
                         //0.6
                         if(listdisaux.at (1) > DRCmin)//0.5
                         {
@@ -2104,7 +2104,7 @@ void distanThread::guardar()
                                 case 300:
                                     dzdr = listdisaux.at (1) - 600;
                                     break;
-                                    
+
                                 default:
                                     break;
                                 }
@@ -2113,7 +2113,7 @@ void distanThread::guardar()
                                 comprobarDZDR(&dzdr);
                                 comprobarDlanzaSegmentosNVzm(&dzdr,a);
                             }
-                            
+
                         }
                         else
                         {
@@ -2156,7 +2156,7 @@ void distanThread::guardar()
                                 case 300:
                                     dzdr = listdisaux.at (2) - 600;
                                     break;
-                                    
+
                                 default:
                                     break;
                                 }
@@ -2165,7 +2165,7 @@ void distanThread::guardar()
                                 comprobarDZDR(&dzdr);
                                 comprobarDlanzaSegmentosNVzm(&dzdr,a);
                             }
-                            
+
                         }
                         else
                         {
@@ -2208,7 +2208,7 @@ void distanThread::guardar()
                                 case 300:
                                     dzdr = listdisaux.at (3) - 600;
                                     break;
-                                    
+
                                 default:
                                     break;
                                 }
@@ -2217,7 +2217,7 @@ void distanThread::guardar()
                                 comprobarDZDR(&dzdr);
                                 comprobarDlanzaSegmentosNVzm(&dzdr,a);
                             }
-                            
+
                         }
                         else
                         {
@@ -2260,7 +2260,7 @@ void distanThread::guardar()
                                 case 300:
                                     dzdr = listdisaux.at (4) - 600;
                                     break;
-                                    
+
                                 default:
                                     break;
                                 }
@@ -2269,7 +2269,7 @@ void distanThread::guardar()
                                 comprobarDZDR(&dzdr);
                                 comprobarDlanzaSegmentosNVzm(&dzdr,a);
                             }
-                            
+
                         }
                         else
                         {
@@ -2292,21 +2292,21 @@ void distanThread::guardar()
                         if(probabilidad  == 4 )
                             disVDirecta[a].append (disLanza);
                         out <<disLanza<<"*";
-                        
+
                         disVDirecta[a].append(disZDR.at (probabilidad));
-                        
+
                         QGeoCoordinate geo;
                         LatOR = calculos->datoterrenoMiPos.LatOR;
                         LonOR = calculos->datoterrenoMiPos.LonOR;
-                        
+
                         geoPos.setLatitude (calculos->datoterrenoMiPos.LatOR);
                         geoPos.setLongitude (calculos->datoterrenoMiPos.LonOR);
-                        
+
                         geo =  geoPos.atDistanceAndAzimuth (disZDR[0],a,0.0);
-                        
+
                         LatOR = geo.latitude ();
                         LonOR = geo.longitude ();
-                        
+
                         if(Vuelo <25)
                         {
                             disZDR[0] = 0;
@@ -2331,13 +2331,13 @@ void distanThread::guardar()
                         out <<0<<"*";
                         out <<0<<"*";
                         out <<0<<"*";
-                        
+
                         out <<0<<"*";//disZDR
                         out <<0<<"*";
                         out <<0<<"*";
                         out <<0<<"*";
                         out <<0<<"*";
-                        
+
                         out <<-LonOR<<','<<LatOR<<"*";
                     }
                 }
@@ -2350,16 +2350,16 @@ void distanThread::guardar()
                         QList<double> disZDR;
                         disLanza = listdisaux.at (0) - tiempo * velocidad;//0.5
                         calcularDlDzr(&disLanza, &dzdr,  a);
-                        
+
                         disZDR.append (dzdr);
                         if(dzdr == 0)
                             disLanza = 0;
                         if(Vuelo <25)
                             disLanza = 0;
                         out <<disLanza<<"*";
-                        
+
                         disLanza = listdisaux.at (1) - tiempo * velocidad;//0.6
-                        
+
                         calcularDlDzr(&disLanza, &dzdr,  a);
                         disZDR.append (dzdr);
                         if(dzdr == 0)
@@ -2367,9 +2367,9 @@ void distanThread::guardar()
                         if(Vuelo <25)
                             disLanza = 0;
                         out <<disLanza<<"*";
-                        
+
                         disLanza = listdisaux.at (2) - tiempo * velocidad; //0.7
-                        
+
                         calcularDlDzr(&disLanza, &dzdr,  a);
                         disZDR.append (dzdr);
                         if(dzdr == 0)
@@ -2377,9 +2377,9 @@ void distanThread::guardar()
                         if(Vuelo <25)
                             disLanza = 0;
                         out <<disLanza<<"*";
-                        
+
                         disLanza = listdisaux.at (3) - tiempo * velocidad;//0.8
-                        
+
                         calcularDlDzr(&disLanza, &dzdr,  a);
                         disZDR.append (dzdr);
                         if(dzdr == 0)
@@ -2387,9 +2387,9 @@ void distanThread::guardar()
                         if(Vuelo <25)
                             disLanza = 0;
                         out <<disLanza<<"*";
-                        
+
                         disLanza = listdisaux.at (4) - tiempo * velocidad;//0.9
-                        
+
                         calcularDlDzr(&disLanza, &dzdr,  a);
                         disZDR.append (dzdr);
                         if(dzdr == 0)
@@ -2397,14 +2397,14 @@ void distanThread::guardar()
                         if(Vuelo <25)
                             disLanza = 0;
                         out <<disLanza<<"*";
-                        
+
                         if(probabilidad > 0)
                         {
                             disLanza = listdisaux.at (probabilidad) - tiempo * velocidad;
                             if(dzdr == 0)
                                 disLanza = 0;
                             calcularDlDzr(&disLanza, &dzdr,  a);
-                            
+
                             if(Vuelo <25)
                                 disLanza = 0;
                             disVDirecta[a].append (disLanza);
@@ -2417,20 +2417,20 @@ void distanThread::guardar()
                             calcularDlDzr(&disLanza, &dzdr,  a);
                             if(dzdr == 0)
                                 disLanza = 0;
-                            
+
                             disVDirecta[a].append (disLanza);
                         }
                         disVDirecta[a].append(disZDR.at (probabilidad));
-                        
+
                         QGeoCoordinate geo;
                         LatOR = calculos->datoterrenoMiPos.LatOR;
                         LonOR = calculos->datoterrenoMiPos.LonOR;
-                        
+
                         geoPos.setLatitude (calculos->datoterrenoMiPos.LatOR);
                         geoPos.setLongitude (calculos->datoterrenoMiPos.LonOR);
-                        
+
                         geo =  geoPos.atDistanceAndAzimuth (disZDR[0],a,0.0);
-                        
+
                         LatOR = geo.latitude ();
                         LonOR = geo.longitude ();
                         if(Vuelo <25)
@@ -2457,18 +2457,18 @@ void distanThread::guardar()
                         out <<0<<"*";
                         out <<0<<"*";
                         out <<0<<"*";
-                        
+
                         out <<0<<"*";//disZDR
                         out <<0<<"*";
                         out <<0<<"*";
                         out <<0<<"*";
                         out <<0<<"*";
-                        
+
                         out <<-LonOR<<','<<LatOR<<"*";
                     }
                 }
             }
-            
+
             if((calculos->medio == 37 ||
                 calculos->medio == 36 ||
                 calculos->medio == 35 ||
@@ -2494,16 +2494,16 @@ void distanThread::guardar()
                     QList<double> disZDR;
                     disLanza = listdisaux.at (0) - tiempo * velocidad;//0.5
                     calcularDlDzr(&disLanza, &dzdr,  a);
-                    
+
                     disZDR.append (dzdr);
                     if(dzdr == 0)
                         disLanza = 0;
                     if(Vuelo <25)
                         disLanza = 0;
                     out <<disLanza<<"*";
-                    
+
                     disLanza = listdisaux.at (1) - tiempo * velocidad;//0.6
-                    
+
                     calcularDlDzr(&disLanza, &dzdr,  a);
                     disZDR.append (dzdr);
                     if(dzdr == 0)
@@ -2511,9 +2511,9 @@ void distanThread::guardar()
                     if(Vuelo <25)
                         disLanza = 0;
                     out <<disLanza<<"*";
-                    
+
                     disLanza = listdisaux.at (2) - tiempo * velocidad; //0.7
-                    
+
                     calcularDlDzr(&disLanza, &dzdr,  a);
                     disZDR.append (dzdr);
                     if(dzdr == 0)
@@ -2521,9 +2521,9 @@ void distanThread::guardar()
                     if(Vuelo <25)
                         disLanza = 0;
                     out <<disLanza<<"*";
-                    
+
                     disLanza = listdisaux.at (3) - tiempo * velocidad;//0.8
-                    
+
                     calcularDlDzr(&disLanza, &dzdr,  a);
                     disZDR.append (dzdr);
                     if(dzdr == 0)
@@ -2531,9 +2531,9 @@ void distanThread::guardar()
                     if(Vuelo <25)
                         disLanza = 0;
                     out <<disLanza<<"*";
-                    
+
                     disLanza = listdisaux.at (4) - tiempo * velocidad;//0.9
-                    
+
                     calcularDlDzr(&disLanza, &dzdr,  a);
                     disZDR.append (dzdr);
                     if(dzdr == 0)
@@ -2541,7 +2541,7 @@ void distanThread::guardar()
                     if(Vuelo <25)
                         disLanza = 0;
                     out <<disLanza<<"*";
-                    
+
                     if(probabilidad > 0)
                     {
                         disLanza = listdisaux.at (probabilidad) - tiempo * velocidad;
@@ -2550,13 +2550,13 @@ void distanThread::guardar()
                         calcularDlDzr(&disLanza, &dzdr,  a);
                         if(dzdr == 0)
                             disLanza = 0;
-                        
+
                         disVDirecta[a].append (disLanza);
                     }
                     else
                     {
                         disLanza = listdisaux.at (0) - tiempo * velocidad;
-                        
+
                         if(Vuelo <25)
                             disLanza = 0;
                         calcularDlDzr(&disLanza, &dzdr,  a);
@@ -2565,19 +2565,19 @@ void distanThread::guardar()
                         disVDirecta[a].append (disLanza);
                     }
                     disVDirecta[a].append(disZDR.at (probabilidad));
-                    
+
                     QGeoCoordinate geo;
                     LatOR = calculos->datoterrenoMiPos.LatOR;
                     LonOR = calculos->datoterrenoMiPos.LonOR;
-                    
+
                     geoPos.setLatitude (calculos->datoterrenoMiPos.LatOR);
                     geoPos.setLongitude (calculos->datoterrenoMiPos.LonOR);
-                    
+
                     geo =  geoPos.atDistanceAndAzimuth (disZDR[0],a,0.0);
-                    
+
                     LatOR = geo.latitude ();
                     LonOR = geo.longitude ();
-                    
+
                     if(Vuelo <25)
                     {
                         disZDR[0] = 0;
@@ -2602,19 +2602,19 @@ void distanThread::guardar()
                     out <<0<<"*";
                     out <<0<<"*";
                     out <<0<<"*";
-                    
+
                     out <<0<<"*";//disZDR
                     out <<0<<"*";
                     out <<0<<"*";
                     out <<0<<"*";
                     out <<0<<"*";
-                    
+
                     out <<-LonOR<<','<<LatOR<<"*";
                 }
             }
         }////////////////
         out << endl;
-        
+
         qDebug() << endl;
     }
     f.close();//cierro el fichero
@@ -2633,7 +2633,7 @@ bool distanThread::leer()
     bool listo = false;
     QDir temp = QDir(QDir::currentPath() + "/Zonas");//direccion de los ficheros de coordenadas geograficas
     QFileInfoList Fich = temp.entryInfoList();
-    
+
     foreach (const QFileInfo info, Fich)
     {
         QString nombfich = info.fileName();
@@ -2647,7 +2647,7 @@ bool distanThread::leer()
     {
         QStringList todo;
         QFile file(QDir::currentPath() + "/Zonas/"+auxF);
-        
+
         if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
             return false;
         while (!file.atEnd())
@@ -2674,13 +2674,13 @@ bool distanThread::leer()
                     {
                         visibilidad = grande.at (8).split(",");
                         disLanzamiento = visibilidad.at(0).toDouble();
-                        
+
                         visibilidad = grande.at (13).split(",");
                         disZDR = visibilidad.at(0).toDouble();
                     }
                     visibilidad = grande.at (1).split(",");//0.5
                     disVDirecta[i].append(visibilidad.at(0).toDouble());
-                    
+
                     if(((calculos->medio == 39 && Vuelo >= 100) || (((calculos->medio == 38  ||  calculos->medio == 37 || calculos->medio == 36|| calculos->medio == 35 || calculos->medio == 34 || calculos->medio == 33 || calculos->medio == 32 || calculos->medio == 31 || calculos->medio == 21 || calculos->medio == 22 || calculos->medio == 23 || calculos->medio == 24 || calculos->medio == 25) && Vuelo >= 25) || calculos->medio==26 || calculos->medio==27 || calculos->medio == 42 || calculos->medio == 43 || calculos->medio == 44)) && calculos->grupo == 1)
                     {
                         disVDirecta[i].append(disLanzamiento);
@@ -2693,13 +2693,13 @@ bool distanThread::leer()
                     {
                         visibilidad = grande.at (9).split(",");
                         disLanzamiento = visibilidad.at(0).toDouble();
-                        
+
                         visibilidad = grande.at (14).split(",");
                         disZDR = visibilidad.at(0).toDouble();
                     }
                     visibilidad = grande.at(4).split(",");//0.6
                     disVDirecta[i].append(visibilidad.at(0).toDouble());
-                    
+
                     if(((calculos->medio == 39 && Vuelo >= 100) || (((calculos->medio == 38  ||  calculos->medio == 37 || calculos->medio == 36|| calculos->medio == 35 || calculos->medio == 34 || calculos->medio == 33 || calculos->medio == 32 || calculos->medio == 31 || calculos->medio == 21 || calculos->medio == 22 || calculos->medio == 23 || calculos->medio == 24 || calculos->medio == 25) && Vuelo >= 25) || calculos->medio==26 || calculos->medio==27 || calculos->medio == 42 || calculos->medio == 43 || calculos->medio == 44)) && calculos->grupo == 1)
                     {
                         disVDirecta[i].append(disLanzamiento);
@@ -2712,13 +2712,13 @@ bool distanThread::leer()
                     {
                         visibilidad = grande.at (10).split(",");
                         disLanzamiento = visibilidad.at(0).toDouble();
-                        
+
                         visibilidad = grande.at (15).split(",");
                         disZDR = visibilidad.at(0).toDouble();
                     }
                     visibilidad = grande.at(5).split(",");//0.7
                     disVDirecta[i].append(visibilidad.at(0).toDouble());
-                    
+
                     if(((calculos->medio == 39 && Vuelo >= 100) || (((calculos->medio == 38  ||  calculos->medio == 37 || calculos->medio == 36|| calculos->medio == 35 || calculos->medio == 34 || calculos->medio == 33 || calculos->medio == 32 || calculos->medio == 31 || calculos->medio == 21 || calculos->medio == 22 || calculos->medio == 23 || calculos->medio == 24 || calculos->medio ==25) && Vuelo >= 25) || calculos->medio==26 || calculos->medio==27 || calculos->medio == 42 || calculos->medio == 43 || calculos->medio == 44)) && calculos->grupo == 1)
                     {
                         disVDirecta[i].append(disLanzamiento);
@@ -2731,13 +2731,13 @@ bool distanThread::leer()
                     {
                         visibilidad = grande.at (11).split(",");
                         disLanzamiento = visibilidad.at(0).toDouble();
-                        
+
                         visibilidad = grande.at (16).split(",");
                         disZDR = visibilidad.at(0).toDouble();
                     }
                     visibilidad = grande.at(6).split(",");//0.8
                     disVDirecta[i].append(visibilidad.at(0).toDouble());
-                    
+
                     if(((calculos->medio == 39 && Vuelo >= 100) || (((calculos->medio == 38  ||  calculos->medio == 37 || calculos->medio == 36|| calculos->medio == 35 || calculos->medio == 34 || calculos->medio == 33 || calculos->medio == 32 || calculos->medio == 31 || calculos->medio == 21 || calculos->medio == 22 || calculos->medio == 23 || calculos->medio == 24 || calculos->medio ==25) && Vuelo >= 25) || calculos->medio==26 || calculos->medio==27 || calculos->medio == 42 || calculos->medio == 43 || calculos->medio == 44)) && calculos->grupo == 1)
                     {
                         disVDirecta[i].append(disLanzamiento);
@@ -2750,13 +2750,13 @@ bool distanThread::leer()
                     {
                         visibilidad = grande.at (12).split(",");
                         disLanzamiento = visibilidad.at(0).toDouble();
-                        
+
                         visibilidad = grande.at (17).split(",");
                         disZDR = visibilidad.at(0).toDouble();
                     }
                     visibilidad = grande.at(7).split(",");//0.9
                     disVDirecta[i].append(visibilidad.at(0).toDouble());
-                    
+
                     if(((calculos->medio == 39 && Vuelo >= 100) || (((calculos->medio == 38  ||  calculos->medio == 37 || calculos->medio == 36|| calculos->medio == 35 || calculos->medio == 34 || calculos->medio == 33 || calculos->medio == 32 || calculos->medio == 31 || calculos->medio == 21 || calculos->medio == 22 || calculos->medio == 23 || calculos->medio == 24 || calculos->medio == 25) && Vuelo >= 25) || calculos->medio==26 || calculos->medio==27 || calculos->medio == 42 || calculos->medio == 43 || calculos->medio == 44)) && calculos->grupo == 1)
                     {
                         disVDirecta[i].append(disLanzamiento);
@@ -2765,7 +2765,7 @@ bool distanThread::leer()
                 }
                 visib = visibilidad.at(0).toDouble();
                 visibilidad = grande.at(1).split(",");
-                
+
                 for (int j = 1; j < visibilidad.length(); ++j)
                 {
                     if(visibilidad.at(j).toDouble() < visib)
@@ -2810,7 +2810,7 @@ void distanThread::run()
     detener = true;
     if(((calculos->medio >=21 && calculos->medio <=39) || (calculos->medio >=42 && calculos->medio <=44)) && calculos->grupo == 1)
         leerVelocidad ();
-    
+
     calcDistancia();
 }
 
@@ -3112,7 +3112,7 @@ void distanThread::determDistanCiclo(/*int g, int a, int m*/)
                 break;
             }
             break;
-            
+
         case 13:
             distancia = 40050;
             switch (Vuelo) {
@@ -3346,7 +3346,7 @@ void distanThread::determDistanCiclo(/*int g, int a, int m*/)
             }
             zonamuerta = 5*Vuelo;
             break;
-            
+
         case 45:
             zonamuerta = 2.25*Vuelo;
             if(calculos->tipoBiesta == "Rx")
@@ -3376,7 +3376,7 @@ void distanThread::determDistanCiclo(/*int g, int a, int m*/)
                 }
             }
             break;
-            
+
         case 46:
             zonamuerta = 3500;
             if(calculos->tipoBiesta == "Rx")
@@ -3390,7 +3390,7 @@ void distanThread::determDistanCiclo(/*int g, int a, int m*/)
                 distanciamax  = distanciamaxOficial = 30000;
             }
             break;
-            
+
         case 47:
             if(calculos->tipoBiesta == "Rx")
             {
@@ -3667,12 +3667,12 @@ void distanThread::tangente(int ang)
     case 3: tang1 = 0.069926812; tang2 = 0.034920769; break;
     case 4: tang1 = 0.087488664; tang2 = 0.052407779; break;
     }
-    
+
 }
 
 bool distanThread::pintarDistancias()//para guldris
 {
-    
+
     QVector<double> x1; QVector<double> y1;
     QString datostabla;
     for (int a = 0; a <= 360; a++)
@@ -3687,7 +3687,7 @@ bool distanThread::pintarDistancias()//para guldris
                     {
                         if(i < disInternas[a].length()-1 )
                         {
-                            
+
                         }
                         else
                         {
@@ -3711,7 +3711,7 @@ bool distanThread::pintarDistancias()//para guldris
                         else
                         {
                             disVDirecta[0].replace (0,disInternas[0].last ());
-                            
+
                         }
                     }
                 }
@@ -3734,49 +3734,49 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                 case 0:
                     if(alturaVuelo <= 1000)
                     {DECCM = 10300;return (dvdecc >= 10300);}
-                    
+
                     if(alturaVuelo == 2000)
                     {DECCM = 11300;return (dvdecc >= 11300);}
-                    
+
                     if(alturaVuelo == 4000)
                     {DECCM = 12300;return (dvdecc >= 12300);}
-                    
+
                     if(alturaVuelo == 6000)
                     {DECCM = 14300; return (dvdecc >= 14300);}
-                    
+
                     if(alturaVuelo == 10000)
                     {DECCM = 16300;return (dvdecc >= 16300);}
-                    
+
                     if(alturaVuelo == 17000)
                     {DECCM = 22300;return (dvdecc >= 22300);}
-                    
+
                     if(alturaVuelo == 30000)
                     {DECCM = 29300;return (dvdecc >= 29300);}
                     break;
-                    
+
                 case 14:
                     if(alturaVuelo <= 1000)
                     {DECCM = 12100;return (dvdecc >= 12100);}
-                    
+
                     if(alturaVuelo == 2000)
                     {DECCM = 13100;return (dvdecc >= 13100);}
-                    
+
                     if(alturaVuelo == 4000)
                     {DECCM = 14100;return (dvdecc >= 14100);}
-                    
+
                     if(alturaVuelo == 6000)
                     {DECCM = 16100;return (dvdecc >= 16100);}
-                    
+
                     if(alturaVuelo == 10000)
                     {DECCM = 18100;return (dvdecc >= 18100);}
-                    
+
                     if(alturaVuelo == 17000)
                     {DECCM = 24100;return (dvdecc >= 24100);}
-                    
+
                     if(alturaVuelo == 30000)
                     {DECCM = 31100;return (dvdecc >= 31100);}
                     break;
-                    
+
                 case 25:
                     if(alturaVuelo <= 1000)
                     {DECCM = 13800;return (dvdecc >= 13800);}
@@ -3811,7 +3811,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     break;
                 default:
                     break;
-                    
+
                 }
             }
             if(velocidad == 300)
@@ -3821,49 +3821,49 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                 case 0:
                     if(alturaVuelo <= 1000)
                     {DECCM = 12600;return (dvdecc >= 12600);}
-                    
+
                     if(alturaVuelo == 2000)
                     {DECCM = 12600;return (dvdecc >= 12600);}
-                    
+
                     if(alturaVuelo == 4000)
                     {DECCM = 13600;return (dvdecc >= 13600);}
-                    
+
                     if(alturaVuelo == 6000)
                     {DECCM = 16600;return (dvdecc >= 16600);}
-                    
+
                     if(alturaVuelo == 10000)
                     {DECCM = 19600;return (dvdecc >= 19600);}
-                    
+
                     if(alturaVuelo == 17000)
                     {DECCM = 26600;return (dvdecc >= 26600);}
-                    
+
                     if(alturaVuelo == 30000)
                     {DECCM = 34600; return (dvdecc >= 34600);}
                     break;
-                    
+
                 case 14:
                     if(alturaVuelo <= 1000)
                     {DECCM = 16000;return (dvdecc >= 16000);}
-                    
+
                     if(alturaVuelo == 2000)
                     {DECCM = 16000;return (dvdecc >= 16000);}
-                    
+
                     if(alturaVuelo == 4000)
                     {DECCM = 17000;return (dvdecc >= 17000);}
-                    
+
                     if(alturaVuelo == 6000)
                     {DECCM = 20000;return (dvdecc >= 20000);}
-                    
+
                     if(alturaVuelo == 10000)
                     {DECCM = 23000;return (dvdecc >= 23000);}
-                    
+
                     if(alturaVuelo == 17000)
                     {DECCM = 30000;return (dvdecc >= 30000);}
-                    
+
                     if(alturaVuelo == 30000)
                     {DECCM = 37000;return (dvdecc >= 37000);}
                     break;
-                    
+
                 case 25:
                     if(alturaVuelo <= 2000)
                     {DECCM = 19500;return (dvdecc >= 19500);}
@@ -3896,7 +3896,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     break;
                 default:
                     break;
-                    
+
                 }
             }
             if(velocidad == 420)
@@ -3906,49 +3906,49 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                 case 0:
                     if(alturaVuelo <= 1000)
                     {DECCM = 15900;return (dvdecc >= 15900);}
-                    
+
                     if(alturaVuelo == 2000)
                     {DECCM = 16900;return (dvdecc >= 16900);}
-                    
+
                     if(alturaVuelo == 4000)
                     {DECCM = 18900; return (dvdecc >= 18900);}
-                    
+
                     if(alturaVuelo == 6000)
                     {DECCM = 19900;return (dvdecc >= 19900);}
-                    
+
                     if(alturaVuelo == 10000)
                     {DECCM = 19900;return (dvdecc >= 19900);}
-                    
+
                     if(alturaVuelo == 17000)
                     {DECCM = 26900;return (dvdecc >= 26900);}
-                    
+
                     if(alturaVuelo == 30000)
                     {DECCM = 34900;return (dvdecc >= 34900);}
                     break;
-                    
+
                 case 14:
                     if(alturaVuelo <= 1000)
                     {DECCM = 20880;return (dvdecc >= 20880);}
-                    
+
                     if(alturaVuelo == 2000)
                     {DECCM = 21880;return (dvdecc >= 21880);}
-                    
+
                     if(alturaVuelo == 4000)
                     {DECCM = 23880;return (dvdecc >= 23880);}
-                    
+
                     if(alturaVuelo == 6000)
                     {DECCM = 24880;return (dvdecc >= 24880);}
-                    
+
                     if(alturaVuelo == 10000)
                     {DECCM = 24880;return (dvdecc >= 24880);}
-                    
+
                     if(alturaVuelo == 17000)
                     {DECCM = 31880;return (dvdecc >= 31880);}
-                    
+
                     if(alturaVuelo == 30000)
                     {DECCM = 39880;return (dvdecc >= 39880);}
                     break;
-                    
+
                 case 25:
                     if(alturaVuelo <= 2000)
                     {DECCM = 25500;return (dvdecc >= 25500);}
@@ -3990,49 +3990,49 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                 case 0:
                     if(alturaVuelo <= 1000)
                     {DECCM = 18300;return (dvdecc >= 18300);}
-                    
+
                     if(alturaVuelo == 2000)
                     {DECCM = 18300;return (dvdecc >= 18300);}
-                    
+
                     if(alturaVuelo == 4000)
                     {DECCM = 19300;return (dvdecc >= 19300);}
-                    
+
                     if(alturaVuelo == 6000)
                     {DECCM = 22300;return (dvdecc >= 22300);}
-                    
+
                     if(alturaVuelo == 10000)
                     {DECCM = 28300;return (dvdecc >= 28300);}
-                    
+
                     if(alturaVuelo == 17000)
                     {DECCM = 37300;return (dvdecc >= 37300);}
-                    
+
                     if(alturaVuelo == 30000)
                     {DECCM = 69300;return (dvdecc >= 69300);}
                     break;
-                    
+
                 case 14:
                     if(alturaVuelo <= 1000)
                     {DECCM = 26000;return (dvdecc >= 26000);}
-                    
+
                     if(alturaVuelo == 2000)
                     {DECCM = 26000;return (dvdecc >= 26000);}
-                    
+
                     if(alturaVuelo == 4000)
                     {DECCM = 27000; return (dvdecc >= 27000);}
-                    
+
                     if(alturaVuelo == 6000)
                     {DECCM = 30000;return (dvdecc >= 30000);}
-                    
+
                     if(alturaVuelo == 10000)
                     {DECCM = 36000;return (dvdecc >= 36000);}
-                    
+
                     if(alturaVuelo == 17000)
                     {DECCM = 45000;return (dvdecc >= 45000);}
-                    
+
                     if(alturaVuelo == 30000)
                     {DECCM = 77000;return (dvdecc >= 77000);}
                     break;
-                    
+
                 case 25:
                     if(alturaVuelo <= 2000)
                     {DECCM = 33000; return (dvdecc >= 33000);}
@@ -4065,7 +4065,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     break;
                 default:
                     break;
-                    
+
                 }
             }
             if(velocidad == 950)
@@ -4075,49 +4075,49 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                 case 0:
                     if(alturaVuelo <= 1000)
                     {DECCM = 39000;return (dvdecc >= 39000);}
-                    
+
                     if(alturaVuelo == 2000)
                     {DECCM = 39000;return (dvdecc >= 39000);}
-                    
+
                     if(alturaVuelo == 4000)
                     {DECCM = 40000;return (dvdecc >= 40000);}
-                    
+
                     if(alturaVuelo == 6000)
                     {DECCM = 44000;return (dvdecc >= 44000);}
-                    
+
                     if(alturaVuelo == 10000)
                     {DECCM = 45000;return (dvdecc >= 45000);}
-                    
+
                     if(alturaVuelo == 17000)
                     {DECCM = 52000;return (dvdecc >= 52000);}
-                    
+
                     if(alturaVuelo == 30000)
                     {DECCM = 70000;return (dvdecc >= 70000);}
                     break;
-                    
+
                 case 14:
                     if(alturaVuelo <= 1000)
                     {DECCM = 50300;return (dvdecc >= 50300);}
-                    
+
                     if(alturaVuelo == 2000)
                     {DECCM = 50300;return (dvdecc >= 50300);}
-                    
+
                     if(alturaVuelo == 4000)
                     {DECCM = 51300;return (dvdecc >= 51300);}
-                    
+
                     if(alturaVuelo == 6000)
                     {DECCM = 55300;return (dvdecc >= 55300);}
-                    
+
                     if(alturaVuelo == 10000)
                     {DECCM = 56300;return (dvdecc >= 56300);}
-                    
+
                     if(alturaVuelo == 17000)
                     {DECCM = 63300;return (dvdecc >= 63300);}
-                    
+
                     if(alturaVuelo == 30000)
                     {DECCM = 81300;return (dvdecc >= 81300);}
                     break;
-                    
+
                 case 25:
                     if(alturaVuelo <= 2000)
                     {DECCM = 60800;return (dvdecc >= 60800);}
@@ -4155,7 +4155,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
         }
         else
         {
-            
+
             if(velocidad == 150)
             {
                 switch (t)
@@ -4164,32 +4164,32 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                 case 14:
                     if(alturaVuelo <= 6000)
                     {DECCM = 8000;return (dvdecc >= 8000);}
-                    
+
                     if(alturaVuelo == 10000)
                     {DECCM = 9500;return (dvdecc >= 9500);}
-                    
+
                     if(alturaVuelo == 17000)
                     {DECCM = 12000;return (dvdecc >= 12000);}
                     break;
-                    
+
                 case 25:
                     if(alturaVuelo <= 6000)
                     {DECCM = 9500;return (dvdecc >= 9500);}
-                    
+
                     if(alturaVuelo == 10000)
                     {DECCM = 11000;return (dvdecc >= 11000);}
-                    
+
                     if(alturaVuelo == 17000)
                     {DECCM = 13500;return (dvdecc >= 13500);}
                     break;
-                    
+
                 case 35:
                     if(alturaVuelo <= 6000)
                     {DECCM = 11000;return (dvdecc >= 11000);}
-                    
+
                     if(alturaVuelo == 10000)
                     {DECCM = 12500;return (dvdecc >= 12500);}
-                    
+
                     if(alturaVuelo == 17000)
                     {DECCM = 15000;return (dvdecc >= 15000);}
                     break;
@@ -4203,32 +4203,32 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                 case 14:
                     if(alturaVuelo <= 6000)
                     {DECCM = 10353;return (dvdecc >= 10353);}
-                    
+
                     if(alturaVuelo == 10000)
                     {DECCM = 12872;return (dvdecc >= 12872);}
-                    
+
                     if(alturaVuelo == 17000)
                     {DECCM = 16379;return (dvdecc >= 16379);}
                     break;
-                    
+
                 case 25:
                     if(alturaVuelo <= 6000)
                     {DECCM = 14000;return (dvdecc >= 14000);}
-                    
+
                     if(alturaVuelo == 10000)
                     {DECCM = 16000;return (dvdecc >= 16000);}
-                    
+
                     if(alturaVuelo == 17000)
                     {DECCM = 20000;return (dvdecc >= 20000);}
                     break;
-                    
+
                 case 35:
                     if(alturaVuelo <= 6000)
                     {DECCM = 17000;return (dvdecc >= 17000);}
-                    
+
                     if(alturaVuelo == 10000)
                     {DECCM = 19000;return (dvdecc >= 19000);}
-                    
+
                     if(alturaVuelo == 17000)
                     {DECCM = 23000;return (dvdecc >= 23000);}
                     break;
@@ -4242,41 +4242,41 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                 case 14:
                     if(alturaVuelo <= 4000)
                     {DECCM = 13500;return (dvdecc >= 13500);}
-                    
+
                     if(alturaVuelo == 6000)
                     {DECCM = 14000;return (dvdecc >= 14000);}
-                    
+
                     if(alturaVuelo == 10000)
                     {DECCM = 17800;return (dvdecc >= 17800);}
-                    
+
                     if(alturaVuelo == 17000)
                     {DECCM = 22600;return (dvdecc >= 22600);}
                     break;
-                    
+
                 case 25:
                     if(alturaVuelo <= 4000)
                     {DECCM = 18000;return (dvdecc >= 18000);}
-                    
+
                     if(alturaVuelo == 6000)
                     {DECCM = 18500;return (dvdecc >= 18500);}
-                    
+
                     if(alturaVuelo == 10000)
                     {DECCM = 22000;return (dvdecc >= 22000);}
-                    
+
                     if(alturaVuelo == 17000)
                     {DECCM = 26800;return (dvdecc >= 26800);}
                     break;
-                    
+
                 case 35:
                     if(alturaVuelo <= 4000)
                     {DECCM = 22000;return (dvdecc >= 22000);}
-                    
+
                     if(alturaVuelo == 6000)
                     {DECCM = 22700;return (dvdecc >= 22700);}
-                    
+
                     if(alturaVuelo == 10000)
                     {DECCM = 26200;return (dvdecc >= 26200);}
-                    
+
                     if(alturaVuelo == 17000)
                     {DECCM = 31000;return (dvdecc >= 31000);}
                     break;
@@ -4305,12 +4305,12 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     {
                         DECCM = 5800;return (dvdecc >= 5800);
                     }
-                    
+
                     else if(alturaVuelo == 4000)
                     {
                         DECCM = 5800;return (dvdecc >=5800);
                     }
-                    
+
                     else if(alturaVuelo == 6000)
                     {
                         DECCM = 7800;return (dvdecc >= 7800);
@@ -4324,7 +4324,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                         DECCM = 10800;return (dvdecc >= 10800);
                     }
                     break;
-                    
+
                 case 15:
                     if(alturaVuelo <= 400)
                     {
@@ -4338,12 +4338,12 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     {
                         DECCM = 7750;return (dvdecc >= 7750);
                     }
-                    
+
                     else if(alturaVuelo == 4000)
                     {
                         DECCM = 7750;return (dvdecc >= 7750);
                     }
-                    
+
                     else if(alturaVuelo == 6000)
                     {
                         DECCM = 9750;return (dvdecc >= 9750);
@@ -4357,7 +4357,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                         DECCM = 12750;return (dvdecc >= 12750);
                     }
                     break;
-                    
+
                 case 25:
                     if(alturaVuelo <= 400)
                     {
@@ -4371,12 +4371,12 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     {
                         DECCM = 9250;return (dvdecc >= 9250);
                     }
-                    
+
                     else if(alturaVuelo == 4000)
                     {
                         DECCM = 9250;return (dvdecc >= 9250);
                     }
-                    
+
                     else if(alturaVuelo == 6000)
                     {
                         DECCM = 11250;return (dvdecc >= 11250);
@@ -4409,12 +4409,12 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     {
                         DECCM = 8100;return (dvdecc >= 8100);
                     }
-                    
+
                     else if(alturaVuelo == 4000)
                     {
                         DECCM = 9100;return (dvdecc >= 9100);
                     }
-                    
+
                     else if(alturaVuelo == 6000)
                     {
                         DECCM = 10100;return (dvdecc >= 10100);
@@ -4428,7 +4428,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                         DECCM = 13100;return (dvdecc >= 13100);
                     }
                     break;
-                    
+
                 case 15:
                     if(alturaVuelo <= 400)
                     {
@@ -4442,12 +4442,12 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     {
                         DECCM = 12400;return (dvdecc >= 12400);
                     }
-                    
+
                     else if(alturaVuelo == 4000)
                     {
                         DECCM = 13400;return (dvdecc >= 13400);
                     }
-                    
+
                     else if(alturaVuelo == 6000)
                     {
                         DECCM = 14400;return (dvdecc >= 14400);
@@ -4461,7 +4461,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                         DECCM = 17400;return (dvdecc >= 17400);
                     }
                     break;
-                    
+
                 case 25:
                     if(alturaVuelo <= 400)
                     {
@@ -4475,12 +4475,12 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     {
                         DECCM = 15400;return (dvdecc >= 15400);
                     }
-                    
+
                     else if(alturaVuelo == 4000)
                     {
                         DECCM = 16400;return (dvdecc >= 16400);
                     }
-                    
+
                     else if(alturaVuelo == 6000)
                     {
                         DECCM = 17400;return (dvdecc >= 17400);
@@ -4513,12 +4513,12 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     {
                         DECCM = 8340;return (dvdecc >= 8340);
                     }
-                    
+
                     else if(alturaVuelo == 4000)
                     {
                         DECCM = 9340;return (dvdecc >=9340);
                     }
-                    
+
                     else if(alturaVuelo == 6000)
                     {
                         DECCM = 10340;return (dvdecc >= 10340);
@@ -4532,7 +4532,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                         DECCM = 0;return (dvdecc >= 0);
                     }
                     break;
-                    
+
                 case 15:
                     if(alturaVuelo <= 400)
                     {
@@ -4546,12 +4546,12 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     {
                         DECCM = 13800;return (dvdecc >= 13800);
                     }
-                    
+
                     else if(alturaVuelo == 4000)
                     {
                         DECCM = 14800;return (dvdecc >= 14800);
                     }
-                    
+
                     else if(alturaVuelo == 6000)
                     {
                         DECCM = 15800;return (dvdecc >= 15800);
@@ -4565,7 +4565,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                         DECCM = 0;return (dvdecc >= 0);
                     }
                     break;
-                    
+
                 case 25:
                     if(alturaVuelo <= 400)
                     {
@@ -4579,12 +4579,12 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     {
                         DECCM = 18000;return (dvdecc >= 18000);
                     }
-                    
+
                     else if(alturaVuelo == 4000)
                     {
                         DECCM = 19000;return (dvdecc >= 19000);
                     }
-                    
+
                     else if(alturaVuelo == 6000)
                     {
                         DECCM = 20000;return (dvdecc >= 20000);
@@ -4617,12 +4617,12 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     {
                         DECCM = 10780;return (dvdecc >= 10780);
                     }
-                    
+
                     else if(alturaVuelo == 4000)
                     {
                         DECCM = 10780;return (dvdecc >=10780);
                     }
-                    
+
                     else if(alturaVuelo == 6000)
                     {
                         DECCM = 10780;return (dvdecc >= 10780);
@@ -4636,7 +4636,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                         DECCM = 0;return (dvdecc >= 0);
                     }
                     break;
-                    
+
                 case 15:
                     if(alturaVuelo <= 400)
                     {
@@ -4650,12 +4650,12 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     {
                         DECCM = 19100;return (dvdecc >= 19100);
                     }
-                    
+
                     else if(alturaVuelo == 4000)
                     {
                         DECCM = 19100;return (dvdecc >= 19100);
                     }
-                    
+
                     else if(alturaVuelo == 6000)
                     {
                         DECCM = 19100;return (dvdecc >= 19100);
@@ -4669,7 +4669,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                         DECCM = 0;return (dvdecc >= 0);
                     }
                     break;
-                    
+
                 case 25:
                     if(alturaVuelo <= 400)
                     {
@@ -4683,12 +4683,12 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     {
                         DECCM = 25500;return (dvdecc >= 25500);
                     }
-                    
+
                     else if(alturaVuelo == 4000)
                     {
                         DECCM = 25500;return (dvdecc >= 25500);
                     }
-                    
+
                     else if(alturaVuelo == 6000)
                     {
                         DECCM = 25500;return (dvdecc >= 25500);
@@ -4721,12 +4721,12 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                 {
                     DECCM = 18000;return (dvdecc >= 18000);
                 }
-                
+
                 else if(alturaVuelo == 4000)
                 {
                     DECCM = 19000;return (dvdecc >=19000);
                 }
-                
+
                 else if(alturaVuelo == 6000)
                 {
                     DECCM = 22000;return (dvdecc >= 22000);
@@ -4735,7 +4735,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                 {
                     DECCM = 22000;return (dvdecc >= 22000);
                 }
-                
+
             }
             if(velocidad == 300)
             {
@@ -4751,12 +4751,12 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                 {
                     DECCM = 18000;return (dvdecc >= 18000);
                 }
-                
+
                 else if(alturaVuelo == 4000)
                 {
                     DECCM = 19000;return (dvdecc >= 19000);
                 }
-                
+
                 else if(alturaVuelo == 6000)
                 {
                     DECCM = 22000;return (dvdecc >= 22000);
@@ -4768,7 +4768,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
             }
         }
     }
-    
+
     if(calculos->medio == 37)
     {
         if(velocidad == 150)
@@ -4776,7 +4776,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
             switch (t)
             {
             case 0://5100		5100		6100		7100		8100		9100
-                
+
                 if(alturaVuelo <= 400)
                 {
                     DECCM = 5100;return (dvdecc >= 5100);
@@ -4789,12 +4789,12 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                 {
                     DECCM = 6100;return (dvdecc >= 6100);
                 }
-                
+
                 else if(alturaVuelo == 4000)
                 {
                     DECCM = 7100;return (dvdecc >=7100);
                 }
-                
+
                 else if(alturaVuelo == 6000)
                 {
                     DECCM = 8100;return (dvdecc >= 8100);
@@ -4808,9 +4808,9 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     DECCM = 0;return (dvdecc >= 0);
                 }
                 break;
-                
+
             case 24://9000		9000		10000		11000		12000		13000
-                
+
                 if(alturaVuelo <= 400)
                 {
                     DECCM = 9000;return (dvdecc >= 9000);
@@ -4823,12 +4823,12 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                 {
                     DECCM = 10000;return (dvdecc >= 10000);
                 }
-                
+
                 else if(alturaVuelo == 4000)
                 {
                     DECCM = 11000;return (dvdecc >= 11000);
                 }
-                
+
                 else if(alturaVuelo == 6000)
                 {
                     DECCM = 12000;return (dvdecc >= 12000);
@@ -4861,12 +4861,12 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                 {
                     DECCM = 6400;return (dvdecc >= 6400);
                 }
-                
+
                 else if(alturaVuelo == 4000)
                 {
                     DECCM = 7400;return (dvdecc >= 7400);
                 }
-                
+
                 else if(alturaVuelo == 6000)
                 {
                     DECCM = 8400;return (dvdecc >= 8400);
@@ -4880,7 +4880,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     DECCM = 0;return (dvdecc >= 0);
                 }
                 break;
-                
+
             case 24:
                 if(alturaVuelo <= 400)
                 {
@@ -4894,12 +4894,12 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                 {
                     DECCM = 14200;return (dvdecc >= 14200);
                 }
-                
+
                 else if(alturaVuelo == 4000)
                 {
                     DECCM = 15200;return (dvdecc >= 15200);
                 }
-                
+
                 else if(alturaVuelo == 6000)
                 {
                     DECCM = 16200;return (dvdecc >= 16200);
@@ -4932,12 +4932,12 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                 {
                     DECCM = 7640;return (dvdecc >= 7640);
                 }
-                
+
                 else if(alturaVuelo == 4000)
                 {
                     DECCM = 8640;return (dvdecc >=8640);
                 }
-                
+
                 else if(alturaVuelo == 6000)
                 {
                     DECCM = 9640;return (dvdecc >= 9640);
@@ -4951,9 +4951,9 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     DECCM = 0;return (dvdecc >= 0);
                 }
                 break;
-                
+
             case 24://17560		17560		18560		19560		20560		21560
-                
+
                 if(alturaVuelo <= 400)
                 {
                     DECCM = 17560;return (dvdecc >= 17560);
@@ -4966,12 +4966,12 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                 {
                     DECCM = 18560;return (dvdecc >= 18560);
                 }
-                
+
                 else if(alturaVuelo == 4000)
                 {
                     DECCM = 19560;return (dvdecc >= 19560);
                 }
-                
+
                 else if(alturaVuelo == 6000)
                 {
                     DECCM = 20560;return (dvdecc >= 20560);
@@ -5004,12 +5004,12 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                 {
                     DECCM = 9080;return (dvdecc >= 9080);
                 }
-                
+
                 else if(alturaVuelo == 4000)
                 {
                     DECCM = 10080;return (dvdecc >=10080);
                 }
-                
+
                 else if(alturaVuelo == 6000)
                 {
                     DECCM = 11080;return (dvdecc >= 11080);
@@ -5023,7 +5023,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     DECCM = 0;return (dvdecc >= 0);
                 }
                 break;
-                
+
             case 24://25720		25720		25720		26720		27720		28720
                 if(alturaVuelo <= 400)
                 {
@@ -5037,12 +5037,12 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                 {
                     DECCM = 25720;return (dvdecc >= 25720);
                 }
-                
+
                 else if(alturaVuelo == 4000)
                 {
                     DECCM = 26720;return (dvdecc >= 26720);
                 }
-                
+
                 else if(alturaVuelo == 6000)
                 {
                     DECCM = 27720;return (dvdecc >= 27720);
@@ -5078,12 +5078,12 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                 {
                     DECCM = 4800;return (dvdecc >= 4800);
                 }
-                
+
                 else if(alturaVuelo == 4000)
                 {
                     DECCM = 5800;return (dvdecc >=5800);
                 }
-                
+
                 else if(alturaVuelo == 6000)
                 {
                     DECCM = 0;return (dvdecc >= 0);
@@ -5097,7 +5097,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     DECCM = 0;return (dvdecc >= 0);
                 }
                 break;
-                
+
             case 16://8000		8000		9000		10000
                 if(alturaVuelo <= 400)
                 {
@@ -5111,12 +5111,12 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                 {
                     DECCM = 9000;return (dvdecc >= 9000);
                 }
-                
+
                 else if(alturaVuelo == 4000)
                 {
                     DECCM = 10000;return (dvdecc >= 10000);
                 }
-                
+
                 else if(alturaVuelo == 6000)
                 {
                     DECCM = 0;return (dvdecc >= 0);
@@ -5146,7 +5146,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     DECCM = 0;return (dvdecc >= 0);
                 }
                 break;
-                
+
             case 16://5600		5600		5600		5600
                 if(alturaVuelo <= 4000)
                 {
@@ -5157,7 +5157,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     DECCM = 0;return (dvdecc >= 0);
                 }
                 break;
-                
+
             }
         }
         if(velocidad == 420)
@@ -5178,7 +5178,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     DECCM = 0;return (dvdecc >= 0);
                 }
                 break;
-                
+
             case 16://10920		10920		10920		11920
                 if(alturaVuelo <= 2000)
                 {
@@ -5216,7 +5216,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     DECCM = 0;return (dvdecc >= 0);
                 }
                 break;
-                
+
             case 5:
                 if(alturaVuelo <= 1000)
                 {
@@ -5251,7 +5251,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     DECCM = 0;return (dvdecc >= 0);
                 }
                 break;
-                
+
             case 5:
                 if(alturaVuelo <= 1000)
                 {
@@ -5266,7 +5266,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     DECCM = 0;return (dvdecc >= 0);
                 }
                 break;
-                
+
             }
         }
         if(velocidad == 420)
@@ -5283,7 +5283,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     DECCM = 0;return (dvdecc >= 0);
                 }
                 break;
-                
+
             case 5:
                 if(alturaVuelo <= 2000)
                 {
@@ -5318,7 +5318,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     DECCM = 0;return (dvdecc >= 0);
                 }
                 break;
-                
+
             case 5:
                 if(alturaVuelo <= 1000)
                 {
@@ -5353,7 +5353,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     DECCM = 0;return (dvdecc >= 0);
                 }
                 break;
-                
+
             case 5:
                 if(alturaVuelo <= 1000)
                 {
@@ -5368,7 +5368,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     DECCM = 0;return (dvdecc >= 0);
                 }
                 break;
-                
+
             }
         }
         if(velocidad == 420)
@@ -5389,7 +5389,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     DECCM = 0;return (dvdecc >= 0);
                 }
                 break;
-                
+
             case 5:
                 if(alturaVuelo <= 1000)
                 {
@@ -5423,7 +5423,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     DECCM = 0;return (dvdecc >= 0);
                 }
                 break;
-                
+
             case 5:
                 if(alturaVuelo <= 2000)
                 {
@@ -5450,7 +5450,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     DECCM = 0;return (dvdecc >= 0);
                 }
                 break;
-                
+
             case 5:
                 if(alturaVuelo <= 2000)
                 {
@@ -5461,7 +5461,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     DECCM = 0;return (dvdecc >= 0);
                 }
                 break;
-                
+
             }
         }
         if(velocidad == 420)
@@ -5478,7 +5478,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     DECCM = 0;return (dvdecc >= 0);
                 }
                 break;
-                
+
             case 5:
                 if(alturaVuelo <= 2000)
                 {
@@ -5508,7 +5508,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     DECCM = 0;return (dvdecc >= 0);
                 }
                 break;
-                
+
             case 5:
                 if(alturaVuelo <= 2000)
                 {
@@ -5535,7 +5535,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     DECCM = 0;return (dvdecc >= 0);
                 }
                 break;
-                
+
             case 5:
                 if(alturaVuelo <= 2000)
                 {
@@ -5546,7 +5546,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     DECCM = 0;return (dvdecc >= 0);
                 }
                 break;
-                
+
             }
         }
         if(velocidad == 420)
@@ -5563,7 +5563,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     DECCM = 0;return (dvdecc >= 0);
                 }
                 break;
-                
+
             case 5:
                 if(alturaVuelo <= 2000)
                 {
@@ -5593,7 +5593,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     DECCM = 0;return (dvdecc >= 0);
                 }
                 break;
-                
+
             case 5:
                 if(alturaVuelo <= 2000)
                 {
@@ -5620,7 +5620,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     DECCM = 0;return (dvdecc >= 0);
                 }
                 break;
-                
+
             case 5:
                 if(alturaVuelo <= 2000)
                 {
@@ -5631,7 +5631,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     DECCM = 0;return (dvdecc >= 0);
                 }
                 break;
-                
+
             }
         }
         if(velocidad == 420)
@@ -5648,7 +5648,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     DECCM = 0;return (dvdecc >= 0);
                 }
                 break;
-                
+
             case 5:
                 if(alturaVuelo <= 2000)
                 {
@@ -5662,7 +5662,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
             }
         }
     }
-    
+
     if(calculos->medio == 27)
     {
         if(velocidad == 300)
@@ -5703,7 +5703,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     DECCM = 0;return (dvdecc >= 0);
                 }
                 break;
-                
+
             case 5:
                 if(alturaVuelo <= 100)
                 {
@@ -5778,7 +5778,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     DECCM = 0;return (dvdecc >= 0);
                 }
                 break;
-                
+
             case 5:
                 if(alturaVuelo <= 100)
                 {
@@ -5813,7 +5813,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     DECCM = 0;return (dvdecc >= 0);
                 }
                 break;
-                
+
             }
         }
         if(velocidad == 420)
@@ -5854,7 +5854,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     DECCM = 0;return (dvdecc >= 0);
                 }
                 break;
-                
+
             case 5:
                 if(alturaVuelo <= 100)
                 {
@@ -5928,7 +5928,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     DECCM = 0;return (dvdecc >= 0);
                 }
                 break;
-                
+
             case 5:
                 if(alturaVuelo <= 100)
                 {
@@ -5995,7 +5995,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     DECCM = 0;return (dvdecc >= 0);
                 }
                 break;
-                
+
             case 5:
                 if(alturaVuelo <= 100)
                 {
@@ -6026,7 +6026,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     DECCM = 0;return (dvdecc >= 0);
                 }
                 break;
-                
+
             }
         }
         if(velocidad == 420)
@@ -6063,7 +6063,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     DECCM = 0;return (dvdecc >= 0);
                 }
                 break;
-                
+
             case 5:
                 if(alturaVuelo <= 100)
                 {
@@ -6097,7 +6097,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
             }
         }
     }
-    
+
     if(calculos->medio == 25)
     {
         if(velocidad == 300)
@@ -6130,7 +6130,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     DECCM = 0;return (dvdecc >= 0);
                 }
                 break;
-                
+
             case 5:
                 if(alturaVuelo <= 100)
                 {
@@ -6189,7 +6189,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     DECCM = 0;return (dvdecc >= 0);
                 }
                 break;
-                
+
             case 5:
                 if(alturaVuelo <= 100)
                 {
@@ -6216,7 +6216,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     DECCM = 0;return (dvdecc >= 0);
                 }
                 break;
-                
+
             }
         }
         if(velocidad == 420)
@@ -6249,7 +6249,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     DECCM = 0;return (dvdecc >= 0);
                 }
                 break;
-                
+
             case 5:
                 if(alturaVuelo <= 100)
                 {
@@ -6307,7 +6307,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     DECCM = 0;return (dvdecc >= 0);
                 }
                 break;
-                
+
             case 5:
                 if(alturaVuelo <= 100)
                 {
@@ -6330,7 +6330,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     DECCM = 0;return (dvdecc >= 0);
                 }
                 break;
-                
+
             }
         }
         if(velocidad == 300)
@@ -6359,7 +6359,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     DECCM = 0;return (dvdecc >= 0);
                 }
                 break;
-                
+
             case 5:
                 if(alturaVuelo <= 100)
                 {
@@ -6410,7 +6410,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     DECCM = 0;return (dvdecc >= 0);
                 }
                 break;
-                
+
             case 5:
                 if(alturaVuelo <= 100)
                 {
@@ -6464,7 +6464,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     DECCM = 0;return (dvdecc >= 0);
                 }
                 break;
-                
+
             case 5:
                 if(alturaVuelo <= 100)
                 {
@@ -6487,7 +6487,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     DECCM = 0;return (dvdecc >= 0);
                 }
                 break;
-                
+
             }
         }
         if(velocidad == 300)
@@ -6516,7 +6516,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     DECCM = 0;return (dvdecc >= 0);
                 }
                 break;
-                
+
             case 5:
                 if(alturaVuelo <= 100)
                 {
@@ -6567,7 +6567,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     DECCM = 0;return (dvdecc >= 0);
                 }
                 break;
-                
+
             case 5:
                 if(alturaVuelo <= 100)
                 {
@@ -6621,7 +6621,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     DECCM = 0;return (dvdecc >= 0);
                 }
                 break;
-                
+
             case 5:
                 if(alturaVuelo <= 100)
                 {
@@ -6644,7 +6644,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     DECCM = 0;return (dvdecc >= 0);
                 }
                 break;
-                
+
             }
         }
         if(velocidad == 300)
@@ -6673,7 +6673,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     DECCM = 0;return (dvdecc >= 0);
                 }
                 break;
-                
+
             case 5:
                 if(alturaVuelo <= 100)
                 {
@@ -6724,7 +6724,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     DECCM = 0;return (dvdecc >= 0);
                 }
                 break;
-                
+
             case 5:
                 if(alturaVuelo <= 100)
                 {
@@ -6774,7 +6774,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     DECCM = 0;return (dvdecc >= 0);
                 }
                 break;
-                
+
             case 5:
                 if(alturaVuelo <= 100)
                 {
@@ -6793,7 +6793,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     DECCM = 0;return (dvdecc >= 0);
                 }
                 break;
-                
+
             }
         }
         if(velocidad == 300)
@@ -6818,7 +6818,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     DECCM = 0;return (dvdecc >= 0);
                 }
                 break;
-                
+
             case 5:
                 if(alturaVuelo <= 100)
                 {
@@ -6861,7 +6861,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     DECCM = 0;return (dvdecc >= 0);
                 }
                 break;
-                
+
             case 5:
                 if(alturaVuelo <= 100)
                 {
@@ -6883,7 +6883,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
             }
         }
     }
-    
+
     if(calculos->medio == 44)
     {
         if(velocidad == 150)
@@ -6912,7 +6912,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     DECCM = 0;return (dvdecc >= 0);
                 }
                 break;
-                
+
             case 10:
                 if(alturaVuelo <= 100)
                 {
@@ -6935,7 +6935,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     DECCM = 0;return (dvdecc >= 0);
                 }
                 break;
-                
+
             }
         }
         if(velocidad == 300)
@@ -6964,7 +6964,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     DECCM = 0;return (dvdecc >= 0);
                 }
                 break;
-                
+
             case 10:
                 if(alturaVuelo <= 100)
                 {
@@ -7015,7 +7015,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     DECCM = 0;return (dvdecc >= 0);
                 }
                 break;
-                
+
             case 10:
                 if(alturaVuelo <= 100)
                 {
@@ -7077,7 +7077,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     DECCM = 0;return (dvdecc >= 0);
                 }
                 break;
-                
+
             case 10:
                 if(alturaVuelo <= 100)
                 {
@@ -7144,7 +7144,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     DECCM = 0;return (dvdecc >= 0);
                 }
                 break;
-                
+
             case 10:
                 if(alturaVuelo <= 100)
                 {
@@ -7175,7 +7175,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     DECCM = 0;return (dvdecc >= 0);
                 }
                 break;
-                
+
             }
         }
         if(velocidad == 420)
@@ -7212,7 +7212,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     DECCM = 0;return (dvdecc >= 0);
                 }
                 break;
-                
+
             case 10:
                 if(alturaVuelo <= 100)
                 {
@@ -7286,7 +7286,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     DECCM = 0;return (dvdecc >= 0);
                 }
                 break;
-                
+
             case 10:
                 if(alturaVuelo <= 100)
                 {
@@ -7361,7 +7361,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     DECCM = 0;return (dvdecc >= 0);
                 }
                 break;
-                
+
             case 10:
                 if(alturaVuelo <= 100)
                 {
@@ -7396,7 +7396,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     DECCM = 0;return (dvdecc >= 0);
                 }
                 break;
-                
+
             }
         }
         if(velocidad == 420)
@@ -7437,7 +7437,7 @@ bool distanThread::comprobarECC(int t, int alturaVuelo,double dvdecc)
                     DECCM = 0;return (dvdecc >= 0);
                 }
                 break;
-                
+
             case 10:
                 if(alturaVuelo <= 100)
                 {
@@ -7497,12 +7497,12 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
-                    
+
+
                 }
                 if(Vuelo == 2000)
                 {DLCmin = 110000;
@@ -7516,15 +7516,15 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 4000)
                 {DLCmin = 12000;
-                    
+
                     if(*dl >= dmaxAzzi)
                         *dl = dmaxAzzi - 300;
                     if(*dl >= 12000)
@@ -7535,15 +7535,15 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 6000)
                 {DLCmin = 14000;
-                    
+
                     if(*dl >= dmaxAzzi)
                         *dl = dmaxAzzi - 300;
                     if(*dl >= 14000)
@@ -7554,11 +7554,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 10000)
                 {DLCmin = 16000;
@@ -7570,14 +7570,14 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         {
                             *dl = 54000;
                         }
-                        
+
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 17000)
                 {DLCmin = 22000;
@@ -7589,14 +7589,14 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         {
                             *dl = 54000;
                         }
-                        
+
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 30000)
                 {DLCmin = 29000;
@@ -7610,18 +7610,18 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
             }
             if(velocidad == 300)
             {
                 if(Vuelo <= 1000)
                 {DLCmin = 12000;
-                    
+
                     if(*dl >= dmaxAzzi)
                         *dl = dmaxAzzi - 600;
                     if(*dl >= 12000)
@@ -7630,14 +7630,14 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         {
                             *dl = 37000;
                         }
-                        
+
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 2000)
                 {DLCmin = 12000;
@@ -7649,14 +7649,14 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         {
                             *dl = 37000;
                         }
-                        
+
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 4000)
                 {DLCmin = 13000;
@@ -7668,14 +7668,14 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         {
                             *dl = 54000;
                         }
-                        
+
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 6000)
                 {DLCmin = 16000;
@@ -7687,14 +7687,14 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         {
                             *dl = 58000;
                         }
-                        
+
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 10000)
                 {DLCmin = 19000;
@@ -7706,14 +7706,14 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         {
                             *dl = 68000;
                         }
-                        
+
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 17000)
                 {DLCmin = 26000;
@@ -7725,14 +7725,14 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         {
                             *dl = 73000;
                         }
-                        
+
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 30000)
                 {DLCmin = 34000;
@@ -7744,14 +7744,14 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         {
                             *dl = 66000;
                         }
-                        
+
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
             }
             if(velocidad == 420)
@@ -7770,11 +7770,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                             *dl = dmaxAzzi - 840;
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 2000)
                 {DLCmin = 16000;
@@ -7786,14 +7786,14 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         {
                             *dl = 51000;
                         }
-                        
+
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 4000)
                 {DLCmin = 18000;
@@ -7805,14 +7805,14 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         {
                             *dl = 54000;
                         }
-                        
+
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 6000)
                 {DLCmin = 19000;
@@ -7824,14 +7824,14 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         {
                             *dl = 58000;
                         }
-                        
+
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 10000)
                 {DLCmin = 19000;
@@ -7843,14 +7843,14 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         {
                             *dl = 69000;
                         }
-                        
+
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 17000)
                 {DLCmin = 26000;
@@ -7862,14 +7862,14 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         {
                             *dl = 69000;
                         }
-                        
+
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 30000)
                 {DLCmin = 34000;
@@ -7881,14 +7881,14 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         {
                             *dl = 69000;
                         }
-                        
+
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
             }
             if(velocidad == 640)
@@ -7903,14 +7903,14 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         {
                             *dl = 49000;
                         }
-                        
+
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 2000)
                 {DLCmin = 17000;
@@ -7922,14 +7922,14 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         {
                             *dl = 49000;
                         }
-                        
+
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 4000)
                 {DLCmin = 18000;
@@ -7943,11 +7943,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 6000)
                 {DLCmin = 21000;
@@ -7961,11 +7961,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 10000)
                 {DLCmin = 27000;
@@ -7979,11 +7979,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 17000)
                 {DLCmin = 36000;
@@ -7997,11 +7997,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 30000)
                 {DLCmin = 68000;
@@ -8015,11 +8015,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
             }
             if(velocidad == 950)
@@ -8036,11 +8036,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 2000)
                 {DLCmin = 37000;
@@ -8052,14 +8052,14 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         {
                             *dl = 56000;
                         }
-                        
+
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 4000)
                 {DLCmin = 38000;
@@ -8071,18 +8071,18 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         {
                             *dl = 61000;
                         }
-                        
+
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 6000)
                 {DLCmin = 42000;
-                    
+
                     if(*dl >= dmaxAzzi)
                         *dl = dmaxAzzi - 1900;
                     if(*dl >= 42000)
@@ -8093,11 +8093,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 10000)
                 {DLCmin = 43000;
@@ -8111,11 +8111,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 17000)
                 {DLCmin = 50000;
@@ -8129,11 +8129,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 30000)
                 {DLCmin = 68000;
@@ -8145,14 +8145,14 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         {
                             *dl = 85000;
                         }
-                        
+
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
             }
         }
@@ -8172,12 +8172,12 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
-                    
+
+
                 }
                 if(Vuelo == 2000)
                 {DLCmin = 6000;
@@ -8191,15 +8191,15 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 4000)
                 {DLCmin = 6000;
-                    
+
                     if(*dl >= dmaxAzzi)
                         *dl = dmaxAzzi - 300;
                     if(*dl >= 6000)
@@ -8210,15 +8210,15 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 6000)
                 {DLCmin = 6000;
-                    
+
                     if(*dl >= dmaxAzzi)
                         *dl = dmaxAzzi - 300;
                     if(*dl >= 6000)
@@ -8229,11 +8229,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 10000)
                 {DLCmin = 7000;
@@ -8245,14 +8245,14 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         {
                             *dl = 25000;
                         }
-                        
+
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 17000)
                 {DLCmin = 9000;
@@ -8264,14 +8264,14 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         {
                             *dl = 30000;
                         }
-                        
+
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
                 //                if(Vuelo == 30000)
                 //                {DLCmin = 29000;
@@ -8285,18 +8285,18 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                 //                        }
                 //                        return true;
                 //                    }
-                
-                
+
+
                 //                    *dl = 0;
                 //                    return false;
-                
+
                 //                }
             }
             if(velocidad == 300)
             {
                 if(Vuelo <= 1000)
                 {DLCmin = 6000;
-                    
+
                     if(*dl >= dmaxAzzi)
                         *dl = dmaxAzzi - 600;
                     if(*dl >= 6000)
@@ -8305,14 +8305,14 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         {
                             *dl = 11000;
                         }
-                        
+
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 2000)
                 {DLCmin = 6000;
@@ -8324,14 +8324,14 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         {
                             *dl = 11000;
                         }
-                        
+
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 4000)
                 {DLCmin = 6000;
@@ -8343,14 +8343,14 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         {
                             *dl = 12000;
                         }
-                        
+
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 6000)
                 {DLCmin = 6000;
@@ -8362,14 +8362,14 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         {
                             *dl = 13500;
                         }
-                        
+
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 10000)
                 {DLCmin = 7000;
@@ -8381,14 +8381,14 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         {
                             *dl = 16000;
                         }
-                        
+
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 17000)
                 {DLCmin = 9000;
@@ -8400,14 +8400,14 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         {
                             *dl = 18000;
                         }
-                        
+
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
                 //                if(Vuelo == 30000)
                 //                {DLCmin = 34000;
@@ -8419,14 +8419,14 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                 //                        {
                 //                            *dl = 66000;
                 //                        }
-                
+
                 //                        return true;
                 //                    }
-                
-                
+
+
                 //                    *dl = 0;
                 //                    return false;
-                
+
                 //                }
             }
             if(velocidad == 420)
@@ -8445,11 +8445,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                             *dl = dmaxAzzi - 840;
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 2000)
                 {DLCmin = 6000;
@@ -8461,14 +8461,14 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         {
                             *dl = 9000;
                         }
-                        
+
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 4000)
                 {DLCmin = 6000;
@@ -8480,14 +8480,14 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         {
                             *dl = 10000;
                         }
-                        
+
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 6000)
                 {DLCmin = 6000;
@@ -8499,14 +8499,14 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         {
                             *dl = 12000;
                         }
-                        
+
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 10000)
                 {DLCmin = 7000;
@@ -8518,14 +8518,14 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         {
                             *dl = 14000;
                         }
-                        
+
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 17000)
                 {DLCmin = 11000;
@@ -8537,14 +8537,14 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         {
                             *dl = 16000;
                         }
-                        
+
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
                 //                if(Vuelo == 30000)
                 //                {DLCmin = 34000;
@@ -8556,19 +8556,19 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                 //                        {
                 //                            *dl = 69000;
                 //                        }
-                
+
                 //                        return true;
                 //                    }
-                
-                
+
+
                 //                    *dl = 0;
                 //                    return false;
-                
+
                 //                }
             }
         }
     }
-    
+
     if(calculos->medio == 38)
     {
         if(!alcance)
@@ -8588,12 +8588,12 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
-                    
+
+
                 }
                 else  if(Vuelo <= 1000)
                 {DLCmin = 4800;
@@ -8607,15 +8607,15 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
                 else if(Vuelo == 2000)
                 {DLCmin = 5500;
-                    
+
                     if(*dl >= dmaxAzzi)
                         *dl = dmaxAzzi - 300;
                     if(*dl >= 5500)
@@ -8626,15 +8626,15 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
                 else  if(Vuelo == 4000)
                 {DLCmin = 5500;
-                    
+
                     if(*dl >= dmaxAzzi)
                         *dl = dmaxAzzi - 300;
                     if(*dl >= 5500)
@@ -8645,11 +8645,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
                 else  if(Vuelo == 6000)
                 {DLCmin = 7500;
@@ -8661,14 +8661,14 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         {
                             *dl = 22500;
                         }
-                        
+
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
                 else  if(Vuelo == 10000)
                 {DLCmin = 8500;
@@ -8680,14 +8680,14 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         {
                             *dl = 23500;
                         }
-                        
+
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
                 else  /*17000*/
                 {DLCmin = 10500;
@@ -8699,14 +8699,14 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         {
                             *dl = 28500;
                         }
-                        
+
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
             }
             if(velocidad == 300)
@@ -8724,12 +8724,12 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
-                    
+
+
                 }
                 else  if(Vuelo <= 1000)
                 {DLCmin = 6500;
@@ -8743,15 +8743,15 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
                 else if(Vuelo == 2000)
                 {DLCmin = 7500;
-                    
+
                     if(*dl >= dmaxAzzi)
                         *dl = dmaxAzzi - 600;
                     if(*dl >=7500)
@@ -8762,15 +8762,15 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
                 else  if(Vuelo == 4000)
                 {DLCmin = 8500;
-                    
+
                     if(*dl >= dmaxAzzi)
                         *dl = dmaxAzzi - 600;
                     if(*dl >= 8500)
@@ -8781,11 +8781,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
                 else  if(Vuelo == 6000)
                 {DLCmin =9500;
@@ -8797,14 +8797,14 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         {
                             *dl = 26500;
                         }
-                        
+
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
                 else  if(Vuelo == 10000)
                 {DLCmin = 10500;
@@ -8816,14 +8816,14 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         {
                             *dl = 28500;
                         }
-                        
+
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
                 else  /*17000*/
                 {DLCmin = 12500;
@@ -8835,14 +8835,14 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         {
                             *dl = 33500;
                         }
-                        
+
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
             }
             if(velocidad == 420)
@@ -8860,12 +8860,12 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
-                    
+
+
                 }
                 else  if(Vuelo <= 1000)
                 {DLCmin = 6800;
@@ -8879,15 +8879,15 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
                 else if(Vuelo == 2000)
                 {DLCmin = 7500;
-                    
+
                     if(*dl >= dmaxAzzi)
                         *dl = dmaxAzzi - 840;
                     if(*dl >= 7500)
@@ -8898,15 +8898,15 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
                 else  if(Vuelo == 4000)
                 {DLCmin = 8500;
-                    
+
                     if(*dl >= dmaxAzzi)
                         *dl = dmaxAzzi - 840;
                     if(*dl >= 8500)
@@ -8917,11 +8917,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
                 else  if(Vuelo == 6000)
                 {DLCmin = 9500;
@@ -8933,14 +8933,14 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         {
                             *dl = 30500;
                         }
-                        
+
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
                 else  if(Vuelo == 10000)
                 {DLCmin = 10500;
@@ -8952,14 +8952,14 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         {
                             *dl = 31500;
                         }
-                        
+
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
                 else  /*17000*/
                 {
@@ -8983,8 +8983,8 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
                 }
@@ -9000,15 +9000,15 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
                 else if(Vuelo == 2000)
                 {DLCmin = 9500;
-                    
+
                     if(*dl >= dmaxAzzi)
                         *dl = dmaxAzzi - 1280;
                     if(*dl >= 9500)
@@ -9019,15 +9019,15 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
                 else  if(Vuelo == 4000)
                 {DLCmin = 9500;
-                    
+
                     if(*dl >= dmaxAzzi)
                         *dl = dmaxAzzi - 1280;
                     if(*dl >= 9500)
@@ -9038,11 +9038,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
                 else  if(Vuelo == 6000)
                 {DLCmin = 9500;
@@ -9054,14 +9054,14 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         {
                             *dl = 35500;
                         }
-                        
+
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
                 else  if(Vuelo == 10000)
                 {DLCmin = 10500;
@@ -9073,14 +9073,14 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         {
                             *dl = 37500;
                         }
-                        
+
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
                 else
                 {
@@ -9164,7 +9164,7 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                 if(Vuelo <= 1000)
                 {
                     //                    DLCmin = 3000;
-                    
+
                     if(*dl >= dmaxAzzi)
                         *dl = dmaxAzzi - 600;
                     if(*dl >= 3000)
@@ -9173,14 +9173,14 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         {
                             *dl = 11000;
                         }
-                        
+
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 2000)
                 {
@@ -9193,14 +9193,14 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         {
                             *dl = 12000;
                         }
-                        
+
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 4000)
                 {
@@ -9213,14 +9213,14 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         {
                             *dl = 13000;
                         }
-                        
+
                         return true;
                     }
-                    
-                    
+
+
                     *dl = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo <= 10000)
                 {
@@ -9233,13 +9233,13 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                         {
                             *dl = 17000;
                         }
-                        
+
                         return true;
                     }
-                    
+
                     *dl = 0;
                     return false;
-                    
+
                 }
             }
         }
@@ -9261,12 +9261,12 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
-                
+
+
             }
             else  if(Vuelo <= 1000)
             {DLCmin = 4800;
@@ -9280,15 +9280,15 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo == 2000)
             {DLCmin = 5800;
-                
+
                 if(*dl >= dmaxAzzi)
                     *dl = dmaxAzzi - 300;
                 if(*dl >= 5800)
@@ -9299,15 +9299,15 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else  if(Vuelo == 4000)
             {DLCmin = 6800;
-                
+
                 if(*dl >= dmaxAzzi)
                     *dl = dmaxAzzi - 300;
                 if(*dl >= 6800)
@@ -9318,11 +9318,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else  if(Vuelo == 6000)
             {DLCmin = 7800;
@@ -9334,14 +9334,14 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     {
                         *dl = 31800;
                     }
-                    
+
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else  if(Vuelo == 10000)
             {DLCmin = 8800;
@@ -9353,14 +9353,14 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     {
                         *dl = 31800;
                     }
-                    
+
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else  /*17000*/
             {DLCmin = 0;
@@ -9372,7 +9372,7 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                 //                    {
                 *dl = 0;
                 //                    }
-                
+
                 return true;
                 //                }
                 //                else
@@ -9397,12 +9397,12 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
-                
+
+
             }
             else  if(Vuelo <= 1000)
             {DLCmin = 4800;
@@ -9416,15 +9416,15 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo == 2000)
             {DLCmin = 5800;
-                
+
                 if(*dl >= dmaxAzzi)
                     *dl = dmaxAzzi - 600;
                 if(*dl >=5800)
@@ -9435,15 +9435,15 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else  if(Vuelo == 4000)
             {DLCmin = 6800;
-                
+
                 if(*dl >= dmaxAzzi)
                     *dl = dmaxAzzi - 600;
                 if(*dl >= 6800)
@@ -9454,11 +9454,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else  if(Vuelo == 6000)
             {DLCmin =7800;
@@ -9472,11 +9472,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else  if(Vuelo == 10000)
             {DLCmin = 8800;
@@ -9490,11 +9490,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else
             {
@@ -9517,12 +9517,12 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
-                
+
+
             }
             else  if(Vuelo <= 1000)
             {DLCmin = 5800;
@@ -9536,15 +9536,15 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo == 2000)
             {DLCmin = 6800;
-                
+
                 if(*dl >= dmaxAzzi)
                     *dl = dmaxAzzi - 840;
                 if(*dl >= 6800)
@@ -9555,15 +9555,15 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else  if(Vuelo == 4000)
             {DLCmin = 7800;
-                
+
                 if(*dl >= dmaxAzzi)
                     *dl = dmaxAzzi - 840;
                 if(*dl >= 7800)
@@ -9574,11 +9574,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else  if(Vuelo == 6000)
             {DLCmin = 8800;
@@ -9590,14 +9590,14 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     {
                         *dl = 35800;
                     }
-                    
+
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else  if(Vuelo == 10000)
             {DLCmin = 9800;
@@ -9609,21 +9609,21 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     {
                         *dl = 36800;
                     }
-                    
+
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else
             {
                 DLCmin = 0;
                 *dl = 0;
                 return true;
-                
+
             }
         }
         if(velocidad == 640)
@@ -9641,12 +9641,12 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
-                
+
+
             }
             else  if(Vuelo <= 1000)
             {DLCmin = 7800;
@@ -9660,15 +9660,15 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo == 2000)
             {DLCmin = 7800;
-                
+
                 if(*dl >= dmaxAzzi)
                     *dl = dmaxAzzi - 1280;
                 if(*dl >= 7800)
@@ -9679,15 +9679,15 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else  if(Vuelo == 4000)
             {DLCmin = 8800;
-                
+
                 if(*dl >= dmaxAzzi)
                     *dl = dmaxAzzi - 1280;
                 if(*dl >= 8800)
@@ -9698,11 +9698,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else  if(Vuelo == 6000)
             {DLCmin = 9800;
@@ -9714,14 +9714,14 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     {
                         *dl = 37800;
                     }
-                    
+
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else  if(Vuelo == 10000)
             {DLCmin = 10800;
@@ -9733,14 +9733,14 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     {
                         *dl = 37800;
                     }
-                    
+
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else
             {
@@ -9767,12 +9767,12 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
-                
+
+
             }
             else  if(Vuelo <= 1000)
             {DLCmin = 3200;
@@ -9786,15 +9786,15 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo == 2000)
             {DLCmin = 3200;
-                
+
                 if(*dl >= dmaxAzzi)
                     *dl = dmaxAzzi - 300;
                 if(*dl >= 3200)
@@ -9805,15 +9805,15 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else  if(Vuelo == 4000)
             {DLCmin = 3200;
-                
+
                 if(*dl >= dmaxAzzi)
                     *dl = dmaxAzzi - 300;
                 if(*dl >= 3200)
@@ -9824,11 +9824,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             //            else  if(Vuelo == 6000)
             //            {DLCmin = 7500;
@@ -9840,7 +9840,7 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
             //                    {
             //                        *dl = 22500;
             //                    }
-            
+
             //                    return true;
             //                }
             //                else
@@ -9859,7 +9859,7 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
             //                    {
             //                        *dl = 23500;
             //                    }
-            
+
             //                    return true;
             //                }
             //                else
@@ -9878,7 +9878,7 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                 //                     {
                 *dl = 0;
                 //                     }
-                
+
                 return true;
                 //                 }
                 //                 else
@@ -9903,12 +9903,12 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
-                
+
+
             }
             else  if(Vuelo <= 1000)
             {DLCmin = 3200;
@@ -9922,15 +9922,15 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo == 2000)
             {DLCmin = 4200;
-                
+
                 if(*dl >= dmaxAzzi)
                     *dl = dmaxAzzi - 600;
                 if(*dl >=4200)
@@ -9941,15 +9941,15 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else  if(Vuelo == 4000)
             {DLCmin = 5200;
-                
+
                 if(*dl >= dmaxAzzi)
                     *dl = dmaxAzzi - 600;
                 if(*dl >= 5200)
@@ -9960,18 +9960,18 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else
             {
                 DLCmin = 0;
                 *dl = 0;
                 return true;
-                
+
             }
         }
         if(velocidad == 420)
@@ -9989,12 +9989,12 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
-                
+
+
             }
             else  if(Vuelo <= 1000)
             {DLCmin = 4200;
@@ -10008,15 +10008,15 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo == 2000)
             {DLCmin = 4200;
-                
+
                 if(*dl >= dmaxAzzi)
                     *dl = dmaxAzzi - 840;
                 if(*dl >= 4200)
@@ -10027,15 +10027,15 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else  if(Vuelo == 4000)
             {DLCmin = 5200;
-                
+
                 if(*dl >= dmaxAzzi)
                     *dl = dmaxAzzi - 840;
                 if(*dl >= 5200)
@@ -10046,11 +10046,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else
             {
@@ -10077,15 +10077,15 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo == 2000)
             {DLCmin = 1500;
-                
+
                 if(*dl >= dmaxAzzi)
                     *dl = dmaxAzzi - 300;
                 if(*dl >= 1500)
@@ -10096,11 +10096,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else
             {
@@ -10124,15 +10124,15 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo == 2000)
             {DLCmin = 2200;
-                
+
                 if(*dl >= dmaxAzzi)
                     *dl = dmaxAzzi - 600;
                 if(*dl >= 2200)
@@ -10143,11 +10143,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else
             {
@@ -10171,15 +10171,15 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo == 2000)
             {DLCmin = 2200;
-                
+
                 if(*dl >= dmaxAzzi)
                     *dl = dmaxAzzi - 840;
                 if(*dl >= 2200)
@@ -10190,11 +10190,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else
             {
@@ -10221,11 +10221,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo == 2000)
             {
@@ -10240,11 +10240,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else
             {
@@ -10268,11 +10268,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 1000)
             {
@@ -10287,11 +10287,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             if(Vuelo == 2000)
             {
@@ -10306,11 +10306,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else
             {
@@ -10334,11 +10334,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo == 2000)
             {
@@ -10353,11 +10353,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else
             {
@@ -10384,11 +10384,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else
             {
@@ -10412,11 +10412,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else
             {
@@ -10440,11 +10440,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else
             {
@@ -10471,11 +10471,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else
             {
@@ -10499,11 +10499,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else
             {
@@ -10527,11 +10527,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else
             {
@@ -10558,11 +10558,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else
             {
@@ -10586,11 +10586,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else
             {
@@ -10614,11 +10614,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else
             {
@@ -10628,7 +10628,7 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
             }
         }
     }
-    
+
     if(calculos->medio == 27|| calculos->medio == 42)
     {
         if(velocidad == 150)
@@ -10646,11 +10646,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 500)
             {
@@ -10665,11 +10665,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 1000)
             {
@@ -10684,11 +10684,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 2000)
             {
@@ -10703,11 +10703,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 4000)
             {
@@ -10722,11 +10722,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 6000)
             {
@@ -10741,11 +10741,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 10000)
             {
@@ -10760,11 +10760,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else
             {
@@ -10788,11 +10788,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 500)
             {
@@ -10807,11 +10807,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 1000)
             {
@@ -10826,11 +10826,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 2000)
             {
@@ -10845,11 +10845,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 4000)
             {
@@ -10864,11 +10864,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 6000)
             {
@@ -10883,11 +10883,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 10000)
             {
@@ -10902,11 +10902,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else
             {
@@ -10930,11 +10930,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 500)
             {
@@ -10949,11 +10949,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 1000)
             {
@@ -10968,11 +10968,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 2000)
             {
@@ -10987,11 +10987,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 4000)
             {
@@ -11006,11 +11006,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 6000)
             {
@@ -11025,11 +11025,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 10000)
             {
@@ -11044,11 +11044,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else
             {
@@ -11075,11 +11075,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 500)
             {
@@ -11094,11 +11094,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 1000)
             {
@@ -11113,11 +11113,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 2000)
             {
@@ -11132,11 +11132,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 4000)
             {
@@ -11151,11 +11151,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 6000)
             {
@@ -11170,11 +11170,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else
             {
@@ -11198,11 +11198,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 500)
             {
@@ -11217,11 +11217,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 1000)
             {
@@ -11236,11 +11236,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 2000)
             {
@@ -11255,11 +11255,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 4000)
             {
@@ -11274,11 +11274,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 6000)
             {
@@ -11293,11 +11293,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else
             {
@@ -11321,11 +11321,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 500)
             {
@@ -11340,11 +11340,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 1000)
             {
@@ -11359,11 +11359,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 2000)
             {
@@ -11378,11 +11378,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 4000)
             {
@@ -11397,11 +11397,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 6000)
             {
@@ -11416,11 +11416,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else
             {
@@ -11430,7 +11430,7 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
             }
         }
     }
-    
+
     if(calculos->medio == 25)
     {
         if(velocidad == 150)
@@ -11448,11 +11448,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 500)
             {
@@ -11467,11 +11467,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 1000)
             {
@@ -11486,11 +11486,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 2000)
             {
@@ -11505,11 +11505,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 4000)
             {
@@ -11524,11 +11524,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else
             {
@@ -11552,11 +11552,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 500)
             {
@@ -11571,11 +11571,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 1000)
             {
@@ -11590,11 +11590,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 2000)
             {
@@ -11609,11 +11609,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 4000)
             {
@@ -11628,11 +11628,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else
             {
@@ -11656,11 +11656,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 500)
             {
@@ -11675,11 +11675,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 1000)
             {
@@ -11694,11 +11694,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 2000)
             {
@@ -11713,11 +11713,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 4000)
             {
@@ -11732,11 +11732,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else
             {
@@ -11763,11 +11763,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 500)
             {
@@ -11782,11 +11782,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 1000)
             {
@@ -11801,11 +11801,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 2000)
             {
@@ -11820,11 +11820,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else
             {
@@ -11848,11 +11848,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 500)
             {
@@ -11867,11 +11867,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 1000)
             {
@@ -11886,11 +11886,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 2000)
             {
@@ -11905,11 +11905,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else
             {
@@ -11933,11 +11933,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 500)
             {
@@ -11952,11 +11952,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 1000)
             {
@@ -11971,11 +11971,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 2000)
             {
@@ -11990,11 +11990,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else
             {
@@ -12021,11 +12021,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 500)
             {
@@ -12040,11 +12040,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 1000)
             {
@@ -12059,11 +12059,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 2000)
             {
@@ -12078,11 +12078,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else
             {
@@ -12106,11 +12106,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 500)
             {
@@ -12125,11 +12125,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 1000)
             {
@@ -12144,11 +12144,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 2000)
             {
@@ -12163,11 +12163,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else
             {
@@ -12191,11 +12191,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 500)
             {
@@ -12210,11 +12210,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 1000)
             {
@@ -12229,11 +12229,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 2000)
             {
@@ -12248,11 +12248,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else
             {
@@ -12279,11 +12279,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 500)
             {
@@ -12298,11 +12298,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 1000)
             {
@@ -12317,11 +12317,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 2000)
             {
@@ -12336,11 +12336,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else
             {
@@ -12364,11 +12364,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 500)
             {
@@ -12383,11 +12383,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 1000)
             {
@@ -12402,11 +12402,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 2000)
             {
@@ -12421,11 +12421,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else
             {
@@ -12449,11 +12449,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else  if(Vuelo <= 500)
             {
@@ -12468,11 +12468,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else  if(Vuelo <= 1000)
             {
@@ -12487,11 +12487,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else  if(Vuelo <= 2000)
             {
@@ -12506,11 +12506,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else
             {
@@ -12537,11 +12537,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 500)
             {
@@ -12556,11 +12556,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 1000)
             {
@@ -12575,11 +12575,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else
             {
@@ -12603,11 +12603,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 500)
             {
@@ -12622,11 +12622,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 1000)
             {
@@ -12641,11 +12641,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else
             {
@@ -12669,11 +12669,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 500)
             {
@@ -12688,11 +12688,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 1000)
             {
@@ -12707,11 +12707,11 @@ bool distanThread::comprobarDlanza(double *dl,double dmaxAzzi)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dl = 0;
                 return false;
-                
+
             }
             else
             {
@@ -12741,11 +12741,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo <= 2000)
                 {DRCmin = 8000;
@@ -12757,11 +12757,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 4000)
                 {DRCmin = 9000;
@@ -12773,11 +12773,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 6000)
                 {DRCmin = 10300;
@@ -12789,11 +12789,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 10000)
                 {DRCmin = 12046;
@@ -12805,11 +12805,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 17000)
                 {DRCmin = 17326;
@@ -12821,11 +12821,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 30000)
                 {DRCmin = 23682;
@@ -12837,11 +12837,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
             }
             if(velocidad == 300)
@@ -12856,11 +12856,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo <= 2000)
                 {DRCmin = 7000;
@@ -12872,11 +12872,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 4000)
                 {DRCmin = 7500;
@@ -12888,11 +12888,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 6000)
                 {DRCmin = 9500;
@@ -12904,11 +12904,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 10000)
                 {DRCmin = 11500;
@@ -12920,11 +12920,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 17000)
                 {DRCmin = 17000;
@@ -12936,11 +12936,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 30000)
                 {DRCmin = 24000;
@@ -12952,11 +12952,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
             }
             if(velocidad == 420)
@@ -12971,11 +12971,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo <= 2000)
                 {DRCmin = 8300;
@@ -12987,11 +12987,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 4000)
                 {DRCmin = 8783;
@@ -13003,11 +13003,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 6000)
                 {DRCmin = 9500;
@@ -13019,11 +13019,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 10000)
                 {DRCmin = 9500;
@@ -13035,11 +13035,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 17000)
                 {DRCmin = 15000;
@@ -13051,11 +13051,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 30000)
                 {DRCmin = 20000;
@@ -13067,11 +13067,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
             }
             if(velocidad == 640)
@@ -13086,11 +13086,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo <= 2000)
                 {DRCmin = 7330;
@@ -13102,11 +13102,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 4000)
                 {DRCmin = 8000;
@@ -13118,11 +13118,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 6000)
                 {DRCmin = 9200;
@@ -13134,11 +13134,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 10000)
                 {DRCmin = 12000;
@@ -13150,11 +13150,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 17000)
                 {DRCmin = 17000;
@@ -13166,11 +13166,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 30000)
                 {DRCmin = 35000;
@@ -13182,11 +13182,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
             }
             if(velocidad == 950)
@@ -13201,11 +13201,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo <= 2000)
                 {DRCmin = 16000;
@@ -13217,11 +13217,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 4000)
                 {DRCmin = 16000;
@@ -13233,11 +13233,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 6000)
                 {DRCmin = 17000;
@@ -13249,11 +13249,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 10000)
                 {DRCmin = 18000;
@@ -13265,11 +13265,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 17000)
                 {DRCmin = 22000;
@@ -13281,11 +13281,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 30000)
                 {DRCmin = 31500;
@@ -13297,11 +13297,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
             }
         }
@@ -13319,11 +13319,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo <= 2000)
                 {
@@ -13335,11 +13335,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 4000)
                 {
@@ -13351,11 +13351,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 6000)
                 {
@@ -13367,11 +13367,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 10000)
                 {
@@ -13383,11 +13383,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 17000)
                 {
@@ -13399,11 +13399,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 //                if(Vuelo == 30000)
                 //                {DRCmin = 23682;
@@ -13415,11 +13415,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                 //                        }
                 //                        return true;
                 //                    }
-                
-                
+
+
                 //                    *dzdr = 0;
                 //                    return false;
-                
+
                 //                }
             }
             if(velocidad == 300)
@@ -13434,11 +13434,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo <= 2000)
                 {
@@ -13450,11 +13450,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 4000)
                 {
@@ -13466,11 +13466,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 6000)
                 {
@@ -13482,11 +13482,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 10000)
                 {
@@ -13498,11 +13498,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 17000)
                 {
@@ -13514,11 +13514,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
             }
             if(velocidad == 420)
@@ -13533,10 +13533,10 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo <= 2000)
                 {
@@ -13548,11 +13548,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 4000)
                 {
@@ -13564,11 +13564,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 6000)
                 {
@@ -13580,11 +13580,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 10000)
                 {
@@ -13596,11 +13596,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 if(Vuelo == 17000)
                 {
@@ -13612,11 +13612,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
             }
         }
@@ -13637,10 +13637,10 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 else if(Vuelo <= 1000)
                 {DRCmin = 3500;
@@ -13652,10 +13652,10 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 else  if(Vuelo == 2000)
                 {DRCmin = 4000;
@@ -13667,10 +13667,10 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 else if(Vuelo == 4000)
                 {DRCmin = 4000;
@@ -13682,10 +13682,10 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 else if(Vuelo == 6000)
                 {DRCmin = 5500;
@@ -13697,10 +13697,10 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 else if(Vuelo == 10000)
                 {DRCmin = 6300;
@@ -13712,10 +13712,10 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 else/*17000*/
                 {DRCmin = 7900;
@@ -13727,11 +13727,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
             }
             if(velocidad == 300)
@@ -13746,11 +13746,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 else if(Vuelo <= 1000)
                 {DRCmin = 3900;
@@ -13762,11 +13762,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 else  if(Vuelo == 2000)
                 {DRCmin = 4500;
@@ -13778,11 +13778,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 else if(Vuelo == 4000)
                 {DRCmin = 5000;
@@ -13794,11 +13794,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 else if(Vuelo == 6000)
                 {DRCmin = 5800;
@@ -13810,11 +13810,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 else if(Vuelo == 10000)
                 {DRCmin = 6500;
@@ -13826,11 +13826,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 else/*17000*/
                 {DRCmin = 7900;
@@ -13842,11 +13842,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
             }
             if(velocidad == 420)
@@ -13861,11 +13861,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 else if(Vuelo <= 1000)
                 {DRCmin = 3500;
@@ -13877,11 +13877,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 else  if(Vuelo == 2000)
                 {DRCmin = 3900;
@@ -13893,11 +13893,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 else if(Vuelo == 4000)
                 {DRCmin = 4400;
@@ -13909,11 +13909,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 else if(Vuelo == 6000)
                 {DRCmin = 4900;
@@ -13925,11 +13925,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 else if(Vuelo == 10000)
                 {DRCmin = 5500;
@@ -13941,11 +13941,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 else/*17000*/
                 {DRCmin = 0;
@@ -13981,7 +13981,7 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         *dzdr = 0;
                         return false;
                     }
-                    
+
                 }
                 if(Vuelo <= 1000)
                 {DRCmin = 3600;
@@ -13993,11 +13993,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 else  if(Vuelo == 2000)
                 {DRCmin = 4000;
@@ -14009,11 +14009,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 else if(Vuelo == 4000)
                 {DRCmin = 3900;
@@ -14025,11 +14025,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 else if(Vuelo == 6000)
                 {DRCmin = 3900;
@@ -14041,11 +14041,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 else if(Vuelo == 10000)
                 {DRCmin = 4300;
@@ -14057,11 +14057,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 else/*17000*/
                 {
@@ -14084,11 +14084,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 else if(Vuelo <= 1000)
                 {
@@ -14100,11 +14100,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 else  if(Vuelo == 2000)
                 {
@@ -14116,11 +14116,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 else if(Vuelo == 4000)
                 {
@@ -14132,10 +14132,10 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 else if(Vuelo == 6000)
                 {
@@ -14147,10 +14147,10 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 else if(Vuelo == 10000)
                 {
@@ -14162,11 +14162,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
-                    
+
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
             }
             if(velocidad == 300)
@@ -14181,10 +14181,10 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 else if(Vuelo <= 1000)
                 {
@@ -14196,10 +14196,10 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 else  if(Vuelo == 2000)
                 {
@@ -14211,10 +14211,10 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 else if(Vuelo == 4000)
                 {
@@ -14226,10 +14226,10 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 else if(Vuelo == 6000)
                 {
@@ -14241,10 +14241,10 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
                 else if(Vuelo == 10000)
                 {
@@ -14256,15 +14256,15 @@ bool distanThread::comprobarDZDR(double *dzdr)
                         }
                         return true;
                     }
-                    
+
                     *dzdr = 0;
                     return false;
-                    
+
                 }
             }
         }
     }
-    
+
     if(calculos->medio == 37 )
     {
         if(velocidad == 150)
@@ -14279,11 +14279,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 1000)
             {DRCmin = 3650;
@@ -14295,11 +14295,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else  if(Vuelo == 2000)
             {DRCmin = 4400;
@@ -14311,11 +14311,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo == 4000)
             {DRCmin = 5100;
@@ -14327,11 +14327,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo == 6000)
             {DRCmin = 5800;
@@ -14343,11 +14343,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo == 10000)
             {DRCmin = 6600;
@@ -14359,11 +14359,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else/*17000*/
             {
@@ -14383,11 +14383,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 1000)
             {DRCmin = 3000;
@@ -14399,11 +14399,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else  if(Vuelo == 2000)
             {DRCmin = 3500;
@@ -14415,11 +14415,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo == 4000)
             {DRCmin = 4000;
@@ -14431,11 +14431,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo == 6000)
             {DRCmin = 4600;
@@ -14447,11 +14447,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo == 10000)
             {DRCmin = 5300;
@@ -14463,11 +14463,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else/*17000*/
             {
@@ -14487,7 +14487,7 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
+
                 *dzdr = 0;
                 return false;
             }
@@ -14501,10 +14501,10 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else  if(Vuelo == 2000)
             {DRCmin = 3600;
@@ -14516,11 +14516,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo == 4000)
             {DRCmin = 4100;
@@ -14532,10 +14532,10 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo == 6000)
             {DRCmin = 4500;
@@ -14547,10 +14547,10 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo == 10000)
             {DRCmin = 5000;
@@ -14562,11 +14562,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else/*17000*/
             {
@@ -14589,8 +14589,8 @@ bool distanThread::comprobarDZDR(double *dzdr)
                 }
                 *dzdr = 0;
                 return false;
-                
-                
+
+
             }
             else if(Vuelo <= 1000)
             {DRCmin = 3400;
@@ -14604,7 +14604,7 @@ bool distanThread::comprobarDZDR(double *dzdr)
                 }
                 *dzdr = 0;
                 return false;
-                
+
             }
             else  if(Vuelo == 2000)
             {DRCmin = 4100;
@@ -14618,7 +14618,7 @@ bool distanThread::comprobarDZDR(double *dzdr)
                 }
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo == 4000)
             {DRCmin = 4600;
@@ -14632,7 +14632,7 @@ bool distanThread::comprobarDZDR(double *dzdr)
                 }
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo == 6000)
             {
@@ -14647,7 +14647,7 @@ bool distanThread::comprobarDZDR(double *dzdr)
                 }
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo == 10000)
             {
@@ -14662,7 +14662,7 @@ bool distanThread::comprobarDZDR(double *dzdr)
                 }
                 *dzdr = 0;
                 return false;
-                
+
             }
             else/*17000*/
             {
@@ -14701,7 +14701,7 @@ bool distanThread::comprobarDZDR(double *dzdr)
                 }
                 *dzdr = 0;
                 return false;
-                
+
             }
             else  if(Vuelo == 2000)
             {
@@ -14716,7 +14716,7 @@ bool distanThread::comprobarDZDR(double *dzdr)
                 }
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo == 4000)
             {
@@ -14729,11 +14729,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else/*17000*/
             {
@@ -14755,7 +14755,7 @@ bool distanThread::comprobarDZDR(double *dzdr)
                 }
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 1000)
             {DRCmin = 1600;
@@ -14767,11 +14767,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else  if(Vuelo == 2000)
             {DRCmin = 2000;
@@ -14783,11 +14783,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo == 4000)
             {DRCmin = 2500;
@@ -14799,13 +14799,13 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
-            
+
             else/*17000*/
             {
                 *dzdr = 0;
@@ -14827,7 +14827,7 @@ bool distanThread::comprobarDZDR(double *dzdr)
                 }
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 1000)
             {
@@ -14842,7 +14842,7 @@ bool distanThread::comprobarDZDR(double *dzdr)
                 }
                 *dzdr = 0;
                 return false;
-                
+
             }
             else  if(Vuelo == 2000)
             {
@@ -14857,7 +14857,7 @@ bool distanThread::comprobarDZDR(double *dzdr)
                 }
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo == 4000)
             {DRCmin = 2000;
@@ -14871,9 +14871,9 @@ bool distanThread::comprobarDZDR(double *dzdr)
                 }
                 *dzdr = 0;
                 return false;
-                
+
             }
-            
+
             else/*17000*/
             {
                 *dzdr = 0;
@@ -14881,7 +14881,7 @@ bool distanThread::comprobarDZDR(double *dzdr)
             }
         }
     }
-    
+
     if(calculos->medio == 35 )
     {
         if(velocidad == 150)
@@ -14911,11 +14911,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else  if(Vuelo == 2000)
             {DRCmin = 800;
@@ -15002,7 +15002,7 @@ bool distanThread::comprobarDZDR(double *dzdr)
                 *dzdr = 0;
                 return false;
             }
-            
+
             else
             {
                 *dzdr = 0;
@@ -15024,11 +15024,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 1000)
             {DRCmin = 20;
@@ -15040,11 +15040,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else  if(Vuelo == 2000)
             {DRCmin = 40;
@@ -15056,18 +15056,18 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
-            
+
             else
             {
                 *dzdr = 0;
                 return false;
-                
+
             }
         }
         if(velocidad == 300)
@@ -15082,11 +15082,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 1000)
             {DRCmin = 18;
@@ -15098,11 +15098,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 2000)
             {DRCmin = 38;
@@ -15114,17 +15114,17 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else
             {
                 *dzdr = 0;
                 return false;
-                
+
             }
         }
         if(velocidad == 420)
@@ -15139,11 +15139,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else  if(Vuelo <= 1000)
             {DRCmin = 15;
@@ -15155,11 +15155,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else  if(Vuelo == 2000)
             {DRCmin = 40;
@@ -15171,11 +15171,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else
             {
@@ -15198,17 +15198,17 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else
             {
                 *dzdr = 0;
                 return false;
-                
+
             }
         }
         if(velocidad == 300)
@@ -15223,11 +15223,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo == 2000)
             {DRCmin = 500;
@@ -15239,11 +15239,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else
             {
@@ -15263,11 +15263,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else
             {
@@ -15290,11 +15290,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else
             {
@@ -15314,17 +15314,17 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else
             {
                 *dzdr = 0;
                 return false;
-                
+
             }
         }
         if(velocidad == 420)
@@ -15339,11 +15339,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else
             {
@@ -15366,11 +15366,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else  if(Vuelo == 2000)
             {DRCmin = 500;
@@ -15382,11 +15382,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else
             {
@@ -15406,17 +15406,17 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else
             {
                 *dzdr = 0;
                 return false;
-                
+
             }
         }
         if(velocidad == 420)
@@ -15431,11 +15431,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else  if(Vuelo <= 1000)
             {DRCmin = 500;
@@ -15447,11 +15447,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else  if(Vuelo == 2000)
             {DRCmin = 500;
@@ -15463,11 +15463,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else
             {
@@ -15476,7 +15476,7 @@ bool distanThread::comprobarDZDR(double *dzdr)
             }
         }
     }
-    
+
     if(calculos->medio == 27 || calculos->medio == 42)
     {
         if(velocidad == 150)
@@ -15491,11 +15491,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 500)
             {DRCmin = 50;
@@ -15507,11 +15507,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else  if(Vuelo <= 1000)
             {DRCmin = 100;
@@ -15523,11 +15523,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else  if(Vuelo <= 2000)
             {DRCmin =200;
@@ -15539,11 +15539,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else  if(Vuelo <= 4000)
             {DRCmin = 340;
@@ -15555,11 +15555,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 6000)
             {DRCmin = 680;
@@ -15571,11 +15571,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 10000)
             {DRCmin = 1300;
@@ -15587,11 +15587,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else
             {
@@ -15611,11 +15611,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 500)
             {DRCmin = 50;
@@ -15627,11 +15627,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 1000)
             {DRCmin = 100;
@@ -15643,11 +15643,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 2000)
             {DRCmin = 200;
@@ -15659,11 +15659,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 4000)
             {DRCmin = 340;
@@ -15675,11 +15675,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 6000)
             {DRCmin = 680;
@@ -15691,11 +15691,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 10000)
             {DRCmin = 1300;
@@ -15707,17 +15707,17 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else
             {
                 *dzdr = 0;
                 return false;
-                
+
             }
         }
         if(velocidad == 420)
@@ -15732,11 +15732,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 500)
             {DRCmin = 50;
@@ -15748,11 +15748,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 1000)
             {DRCmin = 100;
@@ -15764,11 +15764,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else  if(Vuelo <= 2000)
             {DRCmin = 200;
@@ -15780,11 +15780,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else  if(Vuelo <= 4000)
             {DRCmin = 340;
@@ -15796,11 +15796,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 6000)
             {DRCmin = 680;
@@ -15812,11 +15812,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 10000)
             {DRCmin = 1300;
@@ -15828,11 +15828,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else
             {
@@ -15855,11 +15855,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 500)
             {DRCmin = 25;
@@ -15871,11 +15871,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 1000)
             {DRCmin = 50;
@@ -15887,11 +15887,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else  if(Vuelo <= 2000)
             {DRCmin = 100;
@@ -15903,11 +15903,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else  if(Vuelo <= 4000)
             {DRCmin = 200;
@@ -15919,11 +15919,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else  if(Vuelo <= 6000)
             {DRCmin = 340;
@@ -15935,11 +15935,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else
             {
@@ -15959,11 +15959,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 500)
             {DRCmin = 25;
@@ -15975,11 +15975,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 1000)
             {DRCmin = 50;
@@ -15991,11 +15991,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 2000)
             {DRCmin = 100;
@@ -16007,11 +16007,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 4000)
             {DRCmin = 200;
@@ -16023,11 +16023,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 6000)
             {DRCmin = 340;
@@ -16039,17 +16039,17 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else
             {
                 *dzdr = 0;
                 return false;
-                
+
             }
         }
         if(velocidad == 420)
@@ -16064,11 +16064,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else  if(Vuelo <= 500)
             {DRCmin = 25;
@@ -16080,11 +16080,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else  if(Vuelo <= 1000)
             {DRCmin = 50;
@@ -16096,11 +16096,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else  if(Vuelo <= 2000)
             {DRCmin = 100;
@@ -16112,11 +16112,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else  if(Vuelo <= 4000)
             {DRCmin = 200;
@@ -16128,11 +16128,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else  if(Vuelo <= 6000)
             {DRCmin = 340;
@@ -16144,11 +16144,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else
             {
@@ -16157,7 +16157,7 @@ bool distanThread::comprobarDZDR(double *dzdr)
             }
         }
     }
-    
+
     if(calculos->medio == 25 )
     {
         if(velocidad == 150)
@@ -16172,11 +16172,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 500)
             {DRCmin = 25;
@@ -16188,11 +16188,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else  if(Vuelo <= 1000)
             {DRCmin = 50;
@@ -16204,11 +16204,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else  if(Vuelo <= 2000)
             {DRCmin =100;
@@ -16220,11 +16220,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else  if(Vuelo <= 4000)
             {DRCmin = 200;
@@ -16236,11 +16236,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else
             {
@@ -16260,11 +16260,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 500)
             {DRCmin = 25;
@@ -16276,11 +16276,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 1000)
             {DRCmin = 50;
@@ -16292,11 +16292,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 2000)
             {DRCmin = 100;
@@ -16308,11 +16308,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 4000)
             {DRCmin = 200;
@@ -16324,17 +16324,17 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else
             {
                 *dzdr = 0;
                 return false;
-                
+
             }
         }
         if(velocidad == 420)
@@ -16349,11 +16349,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 500)
             {DRCmin = 25;
@@ -16365,11 +16365,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 1000)
             {DRCmin = 50;
@@ -16381,11 +16381,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else  if(Vuelo <= 2000)
             {DRCmin = 100;
@@ -16397,11 +16397,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else  if(Vuelo <= 4000)
             {DRCmin = 200;
@@ -16413,11 +16413,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else
             {
@@ -16440,11 +16440,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 500)
             {DRCmin = 25;
@@ -16456,11 +16456,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 1000)
             {DRCmin = 50;
@@ -16472,11 +16472,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else  if(Vuelo <= 2000)
             {DRCmin = 100;
@@ -16488,11 +16488,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else
             {
@@ -16512,11 +16512,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 500)
             {DRCmin = 25;
@@ -16528,11 +16528,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 1000)
             {DRCmin = 50;
@@ -16544,11 +16544,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 2000)
             {DRCmin = 100;
@@ -16560,17 +16560,17 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else
             {
                 *dzdr = 0;
                 return false;
-                
+
             }
         }
         if(velocidad == 420)
@@ -16585,11 +16585,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else  if(Vuelo <= 500)
             {DRCmin = 25;
@@ -16601,11 +16601,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else  if(Vuelo <= 1000)
             {DRCmin = 50;
@@ -16617,11 +16617,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else  if(Vuelo <= 2000)
             {DRCmin = 100;
@@ -16633,11 +16633,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else
             {
@@ -16660,11 +16660,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 500)
             {DRCmin = 25;
@@ -16676,11 +16676,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 1000)
             {DRCmin = 50;
@@ -16692,11 +16692,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 2000)
             {DRCmin = 100;
@@ -16708,17 +16708,17 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else
             {
                 *dzdr = 0;
                 return false;
-                
+
             }
         }
         if(velocidad == 300)
@@ -16733,11 +16733,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             if(Vuelo <= 500)
             {DRCmin = 25;
@@ -16749,11 +16749,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             if(Vuelo <= 1000)
             {DRCmin = 50;
@@ -16765,11 +16765,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 2000)
             {DRCmin = 100;
@@ -16781,11 +16781,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else
             {
@@ -16805,11 +16805,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 500)
             {DRCmin = 25;
@@ -16821,11 +16821,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else  if(Vuelo <= 1000)
             {DRCmin = 50;
@@ -16837,11 +16837,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 2000)
             {DRCmin = 100;
@@ -16853,11 +16853,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else
             {
@@ -16880,11 +16880,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 500)
             {DRCmin = 25;
@@ -16896,11 +16896,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 1000)
             {DRCmin = 50;
@@ -16912,11 +16912,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 2000)
             {DRCmin = 100;
@@ -16928,11 +16928,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else
             {
@@ -16952,11 +16952,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 500)
             {DRCmin = 25;
@@ -16968,11 +16968,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 1000)
             {DRCmin = 50;
@@ -16984,11 +16984,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 2000)
             {DRCmin = 100;
@@ -17000,11 +17000,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else
             {
@@ -17024,11 +17024,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 500)
             {DRCmin = 25;
@@ -17040,11 +17040,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 1000)
             {DRCmin = 50;
@@ -17056,11 +17056,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 2000)
             {DRCmin = 100;
@@ -17072,11 +17072,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else
             {
@@ -17099,11 +17099,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else  if(Vuelo <= 500)
             {DRCmin = 25;
@@ -17115,11 +17115,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else  if(Vuelo <= 1000)
             {DRCmin = 50;
@@ -17131,11 +17131,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else
             {
@@ -17155,11 +17155,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 500)
             {DRCmin = 25;
@@ -17171,11 +17171,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else if(Vuelo <= 1000)
             {DRCmin = 50;
@@ -17187,11 +17187,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else
             {
@@ -17211,11 +17211,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else  if(Vuelo <= 500)
             {DRCmin = 25;
@@ -17227,11 +17227,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else  if(Vuelo <= 1000)
             {DRCmin = 50;
@@ -17243,11 +17243,11 @@ bool distanThread::comprobarDZDR(double *dzdr)
                     }
                     return true;
                 }
-                
-                
+
+
                 *dzdr = 0;
                 return false;
-                
+
             }
             else
             {
@@ -17263,7 +17263,7 @@ bool distanThread::comprobarDlanzaSegmentosNV(double *dl,int a)
     double ini = 0;
     double fin = 0;
     int disrestar=0;
-    
+
     if(!alcance)
     {
         if(calculos->medio == 39)
@@ -17290,7 +17290,7 @@ bool distanThread::comprobarDlanzaSegmentosNV(double *dl,int a)
             case 300: disrestar = 600; break;
             case 420: disrestar = 840; break;
             }
-        
+
         for (int i = 0; i < disInternas[a].length (); ++i)
         {
             if((i)%2 == 0)
@@ -17324,7 +17324,7 @@ bool distanThread::comprobarDlanzaSegmentosNV(double *dl,int a)
             case 150: disrestar = 150; break;
             case 300: disrestar = 300; break;
             case 420: disrestar = 420; break;
-                
+
             }
         if(calculos->medio == 38 || calculos->medio == 37)
             switch (velocidad)
@@ -17341,7 +17341,7 @@ bool distanThread::comprobarDlanzaSegmentosNV(double *dl,int a)
             case 300: disrestar = 600; break;
             case 420: disrestar = 840; break;
             }
-        
+
         for (int i = 0; i < disInternas[a].length (); ++i)
         {
             if((i)%2 == 0)
@@ -17424,21 +17424,21 @@ bool distanThread::comprobarDlanzaDzr(double *dl, double dr, int a)
 
 void distanThread::calcularDlDzr(double *dl, double *dr, int a)
 {
-    
+
     comprobarDlanza (dl,disVDirecta[a].at (0));
     comprobarDlanzaSegmentosNV(dl,a);
     comprobarDlanza (dl,disVDirecta[a].at (0));
     comprobarDlanzaSegmentosNVzm(dl,a);
-    
+
     velocidadCohete = velocidadCohetes (Vuelo,*dl);
     *dr = *dl * velocidadCohete/(velocidad  + velocidadCohete);
     //    qDebug()<< "calcularDlDzr   " << *dl<<"    "<< *dr;
-    
+
     comprobarDZDR(dr);
     comprobarDlanzaSegmentosNV(dr,a);
     comprobarDZDR(dr);
     comprobarDlanzaSegmentosNVzm(dr,a);
-    
+
     if( comprobarDlanzaDzr(dl,*dr,a))
     {
         calcularDlDzr(dl,dr,a);
@@ -17477,10 +17477,10 @@ int distanThread::velocidadCohetes(int hb, double dlanz)
         if(hb<=1000)
             hb = 1000;
     }
-    
+
     int ant = 0;
     int pos = 0;
-    
+
     for (int i = 0; i <= 74; ++i)
     {
         if(tablaVelocidad[i][0] >= dlanz)
@@ -17519,7 +17519,7 @@ void distanThread::leerVelocidad()
     QString name;
     int ini = 0;
     int fin = 0;
-    
+
     if(calculos->medio == 39 && calculos->grupo == 1)
     {
         if(!alcance)
@@ -17564,7 +17564,7 @@ void distanThread::leerVelocidad()
             switch (velocidad) {
             case 300: ini = 1;fin = 23; break;
             case 150: ini = 26;fin = 48; break;
-                
+
                 break;
             }
         }
@@ -17591,7 +17591,7 @@ void distanThread::leerVelocidad()
             break;
         }
     }
-    
+
     if(calculos->medio == 35 && calculos->grupo == 1)
     {
         name = "/m35g1.txt";
@@ -17599,7 +17599,7 @@ void distanThread::leerVelocidad()
         case 300: ini = 1;fin = 16; break;
         case 150: ini = 18;fin = 33; break;
         case 420: ini = 35;fin = 50; break;
-            
+
             break;
         }
     }
@@ -17610,7 +17610,7 @@ void distanThread::leerVelocidad()
         case 300: ini = 1;fin = 18; break;
         case 150: ini = 20;fin = 37; break;
         case 420: ini = 39;fin = 56; break;
-            
+
             break;
         }
     }
@@ -17621,7 +17621,7 @@ void distanThread::leerVelocidad()
         case 300: ini = 1;fin = 11; break;
         case 150: ini = 13;fin = 23; break;
         case 420: ini = 25;fin = 35; break;
-            
+
             break;
         }
     }
@@ -17632,7 +17632,7 @@ void distanThread::leerVelocidad()
         case 300: ini = 1;fin = 9; break;
         case 150: ini = 11;fin = 19; break;
         case 420: ini = 21;fin = 29; break;
-            
+
             break;
         }
     }
@@ -17643,11 +17643,11 @@ void distanThread::leerVelocidad()
         case 300: ini = 1;fin = 15; break;
         case 150: ini = 17;fin = 31; break;
         case 420: ini = 33;fin = 47; break;
-            
+
             break;
         }
     }
-    
+
     if((calculos->medio == 27 || calculos->medio == 42)&& calculos->grupo == 1)
     {
         name = "/m27g1.txt";
@@ -17655,7 +17655,7 @@ void distanThread::leerVelocidad()
         case 300: ini = 1;fin = 44; break;
         case 150: ini = 46;fin = 89; break;
         case 420: ini = 91;fin = 134; break;
-            
+
             break;
         }
     }
@@ -17666,11 +17666,11 @@ void distanThread::leerVelocidad()
         case 300: ini = 1;fin = 28; break;
         case 150: ini = 30;fin = 57; break;
         case 420: ini = 59;fin = 86; break;
-            
+
             break;
         }
     }
-    
+
     if(calculos->medio == 25 && calculos->grupo == 1)
     {
         name = "/m25g1.txt";
@@ -17678,7 +17678,7 @@ void distanThread::leerVelocidad()
         case 300: ini = 1;fin = 22; break;
         case 150: ini = 24;fin = 45; break;
         case 420: ini = 47;fin = 68; break;
-            
+
             break;
         }
     }
@@ -17689,11 +17689,11 @@ void distanThread::leerVelocidad()
         case 300: ini = 1;fin = 18; break;
         case 150: ini = 20;fin = 37; break;
         case 420: ini = 39;fin = 56; break;
-            
+
             break;
         }
     }
-    
+
     if((calculos->medio == 23 || calculos->medio == 44) && calculos->grupo == 1)
     {
         name = "/m23g1.txt";
@@ -17701,7 +17701,7 @@ void distanThread::leerVelocidad()
         case 300: ini = 1;fin = 17; break;
         case 150: ini = 19;fin = 35; break;
         case 420: ini = 37;fin = 53; break;
-            
+
             break;
         }
     }
@@ -17712,7 +17712,7 @@ void distanThread::leerVelocidad()
         case 300: ini = 1;fin = 17; break;
         case 150: ini = 19;fin = 35; break;
         case 420: ini = 37;fin = 53; break;
-            
+
             break;
         }
     }
@@ -17723,13 +17723,13 @@ void distanThread::leerVelocidad()
         case 300: ini = 1;fin = 14; break;
         case 150: ini = 16;fin = 29; break;
         case 420: ini = 31;fin = 44; break;
-            
+
             break;
         }
     }
     QString fileName = QDir::currentPath() + name;
     QFile file(fileName);
-    
+
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
         qDebug()<<"no abre fichero velocidad";
     while (!file.atEnd())
@@ -17738,9 +17738,9 @@ void distanThread::leerVelocidad()
         todo.append(line);
     }
     file.close ();
-    
+
     QStringList aux;
-    
+
     int c = 0;
     for (int i = ini; i <= fin; ++i)
     {
@@ -17748,7 +17748,7 @@ void distanThread::leerVelocidad()
         for (int j = 0; j < aux.length ()-1; ++j)
         {
             const QString& a = aux.at (j).trimmed();
-            
+
             tablaVelocidad[c][j] = a.toInt();
         }
         c++;
@@ -17770,14 +17770,14 @@ void distanThread::corrige(int a)
     if(disInternas[a].length() >= 1)
     {
         //datostabla = QString::number(disVDirecta[0].at(dis)/1000)+ "----> DisInternas(km): ";
-        
+
         for (int i = 0; i < disInternas[a].length(); i++)
         {
             if((i)%2 == 0)
             {
                 if(i < disInternas[a].length()-1 )
                 {
-                    
+
                 }
                 else
                 {
@@ -17811,92 +17811,86 @@ QString distanThread::getTipoOnda() const
 }
 
 
-// Factores de multiplicación para cada valor de Sigma
-// Índice: 0=5.0, 1=0.5, 2=0.1
-//static const double factoresSigma[] = {1.32, 0.84, 0.56};
-//static const double valoresSigma[] = {5.0, 0.5, 0.1};
-//static const QString sufijosSigma[] = {"_S5", "_S05", "_S01"};
-
 //////////////////**********************************************////////////////////////////
 // Inicializar los coeficientes desde Sigma.txt
 // Llamar una sola vez al inicio del programa o en el constructor
 void distanThread::inicializarCoeficientesSigma()
 {
-    
+
     // ============================================================
     // MEDIOS ESTÁNDAR (sin sub-bandas)
     // ============================================================
     // Mantener los coeficientes que YA TENÍAS para estos medios
     // Aquí pongo valores de ejemplo - REEMPLAZA con tus valores reales
-    
+
     // Medio 36
     QHash<double, double> coefs36;
     coefs36.insert(5.0,  1.81);   // REEMPLAZA con tu valor real
     coefs36.insert(0.5, -0.78);   // REEMPLAZA con tu valor real
     coefs36.insert(0.1, -2.6);   // REEMPLAZA con tu valor real
     coeficientesSigma.insert("36", coefs36);
-    
+
     // Medio 37
     QHash<double, double> coefs37;
     coefs37.insert(5.0,  1.89);   // REEMPLAZA con tu valor real
     coefs37.insert(0.5, -0.81);   // REEMPLAZA con tu valor real
     coefs37.insert(0.1, -2.7);   // REEMPLAZA con tu valor real
     coeficientesSigma.insert("37", coefs37);
-    
+
     // Medio 38
     QHash<double, double> coefs38;
     coefs38.insert(5.0,  1.89);   // REEMPLAZA con tu valor real
     coefs38.insert(0.5, -0.81);   // REEMPLAZA con tu valor real
     coefs38.insert(0.1, -2.7);   // REEMPLAZA con tu valor real
     coeficientesSigma.insert("38", coefs38);
-    
+
     // Medio 39
     QHash<double, double> coefs39;
     coefs39.insert(5.0,  2.17);   // REEMPLAZA con tu valor real
     coefs39.insert(0.5, -0.93);   // REEMPLAZA con tu valor real
     coefs39.insert(0.1, -3.1);   // REEMPLAZA con tu valor real
     coeficientesSigma.insert("39", coefs39);
-    
+
     // Medio 42
     QHash<double, double> coefs42;
     coefs42.insert(5.0,  2.66);   // REEMPLAZA con tu valor real
     coefs42.insert(0.5, -1.14);   // REEMPLAZA con tu valor real
     coefs42.insert(0.1, -3.8);   // REEMPLAZA con tu valor real
     coeficientesSigma.insert("42", coefs42);
-    
+
     // Medio 43
     QHash<double, double> coefs43;
     coefs43.insert(5.0,  1.81);   // REEMPLAZA con tu valor real
     coefs43.insert(0.5, -0.78);   // REEMPLAZA con tu valor real
     coefs43.insert(0.1, -2.6);   // REEMPLAZA con tu valor real
     coeficientesSigma.insert("43", coefs43);
-    
+
     // Medio 44
     QHash<double, double> coefs44;
     coefs44.insert(5.0,  1.81);   // REEMPLAZA con tu valor real
     coefs44.insert(0.5, -0.78);   // REEMPLAZA con tu valor real
     coefs44.insert(0.1, -2.6);   // REEMPLAZA con tu valor real
     coeficientesSigma.insert("44", coefs44);
-    
+
     // ============================================================
     // MEDIO 40 - CON SUB-BANDAS (M, DM, CM)
     // ============================================================
     // Los coeficientes que me has pasado:
-    
+
     // Métrica (M)
     QHash<double, double> coefs40_M;
     coefs40_M.insert(5.0,   6.98);
     coefs40_M.insert(0.5,  -2.99);
     coefs40_M.insert(0.1,  -9.98);
     coeficientesSigma.insert("40_M", coefs40_M);
-    
+
     // Decimétrica (DM)
     QHash<double, double> coefs40_DM;
     coefs40_DM.insert(5.0,   3.98);
     coefs40_DM.insert(0.5,  -1.71);
     coefs40_DM.insert(0.1,  -5.70);
     coeficientesSigma.insert("40_DM", coefs40_DM);
-    
+
     // Centimétrica (CM)
     QHash<double, double> coefs40_CM;
     coefs40_CM.insert(5.0,   2.66);
@@ -17949,7 +17943,12 @@ void distanThread::calcularYGuardarSigma(int medio, int grupo, int vuelo,
 
     // Definir valores Sigma, factores y sufijos
     double valoresSigma[] = {5.0, 0.5, 0.1};
-    double factoresSigma[] = {1.32, 0.84, 0.56};
+    double factoresSigma[] = {1.49, 0.84, 0.56};
+
+    double factoresSigmaM[] = {0.82, 0.46, 0.31};
+    double factoresSigmaD[] = {0.89, 0.5, 0.34};
+    double factoresSigmaC[] = {1.2, 0.67, 0.45};
+
     QString sufijosSigma[] = {"_S5", "_S05", "_S01"};
 
     // ============================================================
@@ -17973,7 +17972,28 @@ void distanThread::calcularYGuardarSigma(int medio, int grupo, int vuelo,
     // Calcular para cada Sigma (5.0, 0.5, 0.1)
     for (int i = 0; i < 3; i++) {
         double sigma = valoresSigma[i];
-        double factor = factoresSigma[i];
+        double factor = 0;
+
+        if (medio == 40) {
+            if (tipoOnda.isEmpty()) {
+                qDebug() << "ERROR: Medio 40 requiere tipo de onda configurado";
+                return;
+            }
+
+            if (tipoOnda == "M") {
+                factor = factoresSigmaM[i];
+            } else if (tipoOnda == "DM") {
+                factor = factoresSigmaD[i];
+            } else /*(tipoOnda == "CM")*/ {
+                factor = factoresSigmaC[i];
+            }
+        }
+        else {
+            factor = factoresSigma[i];
+        }
+
+
+
         double coeficiente = coefs[sigma] * 1000;  // km → m
 
         // ============================================================
@@ -18008,6 +18028,7 @@ void distanThread::calcularYGuardarSigma(int medio, int grupo, int vuelo,
             // Para alturas <= 500m, sumar coeficiente
             if (vuelo <= 500) {
                 nuevoDisVDirecta_a += coeficiente;
+                if (nuevoDisVDirecta_a < 0) nuevoDisVDirecta_a = 0;
                 if (nuevoDisVDirecta_a > distanciamaxOficialBanda) {
                     nuevoDisVDirecta_a = distanciamaxOficialBanda;
                 }
@@ -18163,9 +18184,9 @@ void distanThread::guardarFicheroSigma(const QString& nombreFichero,
                                        double sigma,
                                        int indiceSigma,
                                        QList<double> disVDirectaMod[360],
-                                       QList<double> disInternasMod[360],
-                                       QList<double> ZonaMuertaMuisMod[360],
-                                       QList<double> ZonaMuertaMuis2Mod[360])
+QList<double> disInternasMod[360],
+QList<double> ZonaMuertaMuisMod[360],
+QList<double> ZonaMuertaMuis2Mod[360])
 {
     QString auxF = nombreFichero;
     if(alcance)
@@ -18178,7 +18199,7 @@ void distanThread::guardarFicheroSigma(const QString& nombreFichero,
 
     QTextStream out(&f);
 
-    if(!f.open(QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text))
+    if(!f.open(QIODevice::WriteOnly | QIODevice::Text))
         qFatal("No puedo abrir el fichero Sigma para escritura.");
 
     // ============================================================
@@ -18503,7 +18524,7 @@ double distanThread::obtenerDistanciaMaxOficial(int medio, const QString& tipoOn
         } else if (tipoOnda == "DM") {
             return 200000.0;  // Decimétrica: 200 km
         } else if (tipoOnda == "CM") {
-            return 120000.0;  // Centimétrica: 120 km (AJUSTAR SEGÚN ESPECIFICACIÓN)
+            return 360000.0;  // Centimétrica: 120 km (AJUSTAR SEGÚN ESPECIFICACIÓN)
         } else {
             // Por defecto, usar el máximo (métrica)
             qDebug() << "ADVERTENCIA: Tipo de onda desconocido '" << tipoOnda
@@ -18511,10 +18532,10 @@ double distanThread::obtenerDistanciaMaxOficial(int medio, const QString& tipoOn
             return 360000.0;
         }
     }
-//    else if (medio == 41 || medio == 48) {
-//        // Radar de vigilancia aérea (ejemplo)
-//        return 180000.0;  // 180 km
-//    }
+    //    else if (medio == 41 || medio == 48) {
+    //        // Radar de vigilancia aérea (ejemplo)
+    //        return 180000.0;  // 180 km
+    //    }
     else {
         // Para otros medios, usar el valor original (debe estar definido en la clase)
         return distanciamaxOficial;  // Guardar el valor original en el constructor

@@ -1330,6 +1330,7 @@ void dvdpSelAltVuelo::findhilo(bool final)
         lisCustomPlot.append(customp);
 
         radioButons(calculos->grupo,calculos->medio);
+        actualizarVisibilidadBanda();
         ui->pB_Aceptar->setEnabled(true);
         ui->pB_Cancelar->setEnabled(true);
         ui->pBar_Progreso->reset();
@@ -1374,7 +1375,26 @@ void dvdpSelAltVuelo::on_pB_BAltura_clicked()
     verbajas->velocidad = velocidad;
     verbajas->tiempo = tiempo;
     verbajas->fichero = calculos->fichero;
-    if((calculos->medio == 39 || calculos->medio == 38 || calculos->medio == 37 || calculos->medio == 36  || calculos->medio == 35  || calculos->medio == 34  || calculos->medio == 33  || calculos->medio == 32  || calculos->medio == 31|| calculos->medio == 27 || calculos->medio == 26 || calculos->medio == 25  || calculos->medio == 24  || calculos->medio == 23  || calculos->medio == 22  || calculos->medio == 21 || calculos->medio == 42 || calculos->medio == 43 || calculos->medio == 44)  && calculos->grupo == 1)
+    if((calculos->medio == 39 ||
+        calculos->medio == 38 ||
+        calculos->medio == 37 ||
+        calculos->medio == 36 ||
+        calculos->medio == 35 ||
+        calculos->medio == 34 ||
+        calculos->medio == 33 ||
+        calculos->medio == 32 ||
+        calculos->medio == 31 ||
+        calculos->medio == 27 ||
+        calculos->medio == 26 ||
+        calculos->medio == 25 ||
+        calculos->medio == 24 ||
+        calculos->medio == 23 ||
+        calculos->medio == 22 ||
+        calculos->medio == 21 ||
+        calculos->medio == 42 ||
+        calculos->medio == 43 ||
+        calculos->medio == 44 ||
+        calculos->medio == 40)  && calculos->grupo == 1)
     {
         verbajas->fichero.append ("_"+QString::number (velocidad)+"_"+QString::number (tiempo)+"_"+QString::number (parametro));
 
@@ -1389,29 +1409,21 @@ void dvdpSelAltVuelo::on_pB_BAltura_clicked()
         // Añadir sufijo Banda si es medio 40
         if (calculos->medio == 40 && ui->cB_Banda->isVisible()) {
             verbajas->fichero.append("_" + ui->cB_Banda->currentData().toString());
+            verbajas->plottitle->setText ("Bajas Alturas: " + calculos->label+"_P:"+ui->cB_Probabildad->currentText ()+"_Banda:" + ui->cB_Banda->currentData().toString()
+                                          +"_Sigma: " + ui->cB_Sigma->currentText());
+            //            verbajas->plottitle->text().append("_" + ui->cB_Banda->currentData().toString());
         }
+        else
+            verbajas->plottitle->setText ("Bajas Alturas: " + calculos->label+
+                                          "_P:"+ui->cB_Probabildad->currentText ()+
+                                          +"_Sigma: " + ui->cB_Sigma->currentText());
+
     }
 
 
     verbajas->probOno = true;
     verbajas->configInterface();
-    //    if((calculos->medio == 39 || calculos->medio == 38 || calculos->medio == 37 || calculos->medio == 36  || calculos->medio == 35  || calculos->medio == 34  || calculos->medio == 33  || calculos->medio == 32  || calculos->medio == 31 || calculos->medio == 27 || calculos->medio == 26|| calculos->medio == 25  || calculos->medio == 24  || calculos->medio == 23  || calculos->medio == 22  || calculos->medio == 21)  && calculos->grupo == 1)
-    //    {
-    //        if (calculos->medio == 21 || calculos->medio == 22 ||calculos->medio == 26 ||calculos->medio == 27 || calculos->medio == 32 || calculos->medio == 33 || calculos->medio == 34 || calculos->medio == 42 || calculos->medio == 43)
-    //        {
-    //            verbajas->fichero.insert (24,"_"+QString::number (velocidad)+"_"+QString::number (tiempo)+"_"+QString::number (parametro));
-    //            //            nombreAux.insert (24,"_"+QString::number (velocidad)+"_"+QString::number (tiempo)+"_"+QString::number (parametro));
-    //            //        calculos->label.insert (24,"_"+QString::number (velocidad)+"_"+QString::number (tiempo)+"_"+QString::number (parametro));
-    //        }
-    //        else
-    //        {
-    //            verbajas-> fichero.insert (23,"_"+QString::number (velocidad)+"_"+QString::number (tiempo)+"_"+QString::number (parametro));
-    //            //            nombreAux.insert (23,"_"+QString::number (velocidad)+"_"+QString::number (tiempo)+"_"+QString::number (parametro));
-    //            //        calculos->label.insert (23,"_"+QString::number (velocidad)+"_"+QString::number (tiempo)+"_"+QString::number (parametro));
-    //        }
-    //    }
-    //    if((calculos->medio == 39 || calculos->medio == 38 || calculos->medio == 37 || calculos->medio == 36 || calculos->medio == 35 || calculos->medio == 34 || calculos->medio == 33 || calculos->medio == 32 || calculos->medio == 31 || calculos->medio == 25 || calculos->medio == 24 || calculos->medio == 23 || calculos->medio == 22 || calculos->medio == 21)  && calculos->grupo == 1)
-    //        verbajas->fichero.insert (23,"_"+QString::number (velocidad)+"_"+QString::number (tiempo)+"_"+QString::number (parametro));
+
     verbajas->cual = "BAlt";
     verbajas->cont = 0;
     verbajas->probabilidad = probabilidad;
@@ -1516,7 +1528,26 @@ void dvdpSelAltVuelo::on_pB_MAltura_clicked()
     vermedianas->velocidad = velocidad;
     vermedianas->tiempo = tiempo;
     vermedianas->fichero = calculos->fichero;
-    if((calculos->medio == 39 || calculos->medio == 38 || calculos->medio == 37 || calculos->medio == 36  || calculos->medio == 35  || calculos->medio == 34  || calculos->medio == 33  || calculos->medio == 32  || calculos->medio == 31|| calculos->medio == 27 || calculos->medio == 26 || calculos->medio == 25  || calculos->medio == 24  || calculos->medio == 23  || calculos->medio == 22  || calculos->medio == 21 || calculos->medio == 42 || calculos->medio == 43 || calculos->medio == 44)  && calculos->grupo == 1)
+    if((calculos->medio == 39 ||
+        calculos->medio == 38 ||
+        calculos->medio == 37 ||
+        calculos->medio == 36 ||
+        calculos->medio == 35 ||
+        calculos->medio == 34 ||
+        calculos->medio == 33 ||
+        calculos->medio == 32 ||
+        calculos->medio == 31 ||
+        calculos->medio == 27 ||
+        calculos->medio == 26 ||
+        calculos->medio == 25 ||
+        calculos->medio == 24 ||
+        calculos->medio == 23 ||
+        calculos->medio == 22 ||
+        calculos->medio == 21 ||
+        calculos->medio == 42 ||
+        calculos->medio == 43 ||
+        calculos->medio == 44 ||
+        calculos->medio == 40)  && calculos->grupo == 1)
     {
         vermedianas->fichero.append ("_"+QString::number (velocidad)+"_"+QString::number (tiempo)+"_"+QString::number (parametro));
     }
@@ -1528,9 +1559,16 @@ void dvdpSelAltVuelo::on_pB_MAltura_clicked()
         else if (sigma == 0.5)  vermedianas->fichero.append("_S05");
         else if (sigma == 0.1)  vermedianas->fichero.append("_S01");
 
+        // Añadir sufijo Banda si es medio 40
         if (calculos->medio == 40 && ui->cB_Banda->isVisible()) {
             vermedianas->fichero.append("_" + ui->cB_Banda->currentData().toString());
+            vermedianas->plottitle->setText ("Medianas Alturas: " + calculos->label+"_P:"+ui->cB_Probabildad->currentText ()+"_Banda:" + ui->cB_Banda->currentData().toString()
+                                             +"_Sigma: " + ui->cB_Sigma->currentText());
         }
+        else
+            vermedianas->plottitle->setText ("Medianas Alturas: " + calculos->label+
+                                          "_P:"+ui->cB_Probabildad->currentText ()+
+                                          +"_Sigma: " + ui->cB_Sigma->currentText());
     }
 
     vermedianas->probOno = true;
@@ -1563,27 +1601,29 @@ void dvdpSelAltVuelo::on_pB_MAltura_clicked()
     {
         QMessageBox::information (nullptr,"Información","El fichero de 1000m de altura no existe o el medio\n seleccionado no llega a esa altura.",QMessageBox::Ok);
     }
-    if(vermedianas->leer (".020"))
+    if (sigma == 1.0 && ui->cB_Sigma->isVisible())
     {
-        existe = true;
-        vermedianas->pintarDistancias(pen, 2000,0);
-    }
-    else
-    {
-        QMessageBox::information (nullptr,"Información","El fichero de 2000m de altura no existe o el medio\nseleccionado no llega a esa altura.",QMessageBox::Ok);
-    }
-    if(vermedianas->leer (".040"))
-    {
-        existe = true;
-        vermedianas->pintarDistancias(pen, 4000,0);
-    }
-    else
-    {
-        QMessageBox::information (nullptr,"Información","El fichero de 4000m de altura no existe o el medio\nseleccionado no llega a esa altura.",QMessageBox::Ok);
-    }
-    //  if(vermedianas->leer (".060"))
-    //    vermedianas->pintarDistancias(EscalaColor[8], QBrush(QColor(0,100,250,100)));
 
+
+        if(vermedianas->leer (".020"))
+        {
+            existe = true;
+            vermedianas->pintarDistancias(pen, 2000,0);
+        }
+        else
+        {
+            QMessageBox::information (nullptr,"Información","El fichero de 2000m de altura no existe o el medio\nseleccionado no llega a esa altura.",QMessageBox::Ok);
+        }
+        if(vermedianas->leer (".040"))
+        {
+            existe = true;
+            vermedianas->pintarDistancias(pen, 4000,0);
+        }
+        else
+        {
+            QMessageBox::information (nullptr,"Información","El fichero de 4000m de altura no existe o el medio\nseleccionado no llega a esa altura.",QMessageBox::Ok);
+        }
+    }
     if(existe)
     {
         vermedianas->setWindowTitle ("Medianas Alturas Posición: " + calculos->fichero );
@@ -1613,7 +1653,26 @@ void dvdpSelAltVuelo::on_pB_GAltura_clicked()
     veraltas->velocidad = velocidad;
     veraltas->tiempo = tiempo;
     veraltas->fichero = calculos->fichero;
-    if((calculos->medio == 39 || calculos->medio == 38 || calculos->medio == 37 || calculos->medio == 36  || calculos->medio == 35  || calculos->medio == 34  || calculos->medio == 33  || calculos->medio == 32  || calculos->medio == 31|| calculos->medio == 27 || calculos->medio == 26 || calculos->medio == 25  || calculos->medio == 24  || calculos->medio == 23  || calculos->medio == 22  || calculos->medio == 21 || calculos->medio == 42 || calculos->medio == 43 || calculos->medio == 44)  && calculos->grupo == 1)
+    if((calculos->medio == 39 ||
+        calculos->medio == 38 ||
+        calculos->medio == 37 ||
+        calculos->medio == 36 ||
+        calculos->medio == 35 ||
+        calculos->medio == 34 ||
+        calculos->medio == 33 ||
+        calculos->medio == 32 ||
+        calculos->medio == 31 ||
+        calculos->medio == 27 ||
+        calculos->medio == 26 ||
+        calculos->medio == 25 ||
+        calculos->medio == 24 ||
+        calculos->medio == 23 ||
+        calculos->medio == 22 ||
+        calculos->medio == 21 ||
+        calculos->medio == 42 ||
+        calculos->medio == 43 ||
+        calculos->medio == 44 ||
+        calculos->medio == 40)  && calculos->grupo == 1)
     {
         veraltas->fichero.append ("_"+QString::number (velocidad)+"_"+QString::number (tiempo)+"_"+QString::number (parametro));
     }
@@ -2210,13 +2269,26 @@ void dvdpSelAltVuelo::actualizarVisibilidadBanda()
     double sigma = ui->cB_Sigma->currentData().toDouble();
     bool muestraBanda = false;
     if(calculos != nullptr)
-        muestraBanda = (calculos->medio == 40 && sigma != 1.0);
+    {
+        muestraBanda = (/*calculos->medio == 40 && */sigma != 1.0);
 
-    ui->lB_Banda->setVisible(muestraBanda);
-    ui->cB_Banda->setVisible(muestraBanda);
+        if(calculos->medio == 40)
+        {
+            ui->lB_Banda->setVisible(muestraBanda);
+            ui->cB_Banda->setVisible(muestraBanda);
+            if (!muestraBanda) {
+                ui->cB_Banda->setCurrentIndex(0);  // Resetear a "M"
+            }
+        }
+        ui->rB_2000m->setDisabled(muestraBanda);
+        ui->rB_4000m->setDisabled(muestraBanda);
+        ui->rB_6000m->setDisabled(muestraBanda);
+        ui->rB_10000m->setDisabled(muestraBanda);
+        ui->rB_17000m->setDisabled(muestraBanda);
+        ui->rB_30000m->setDisabled(muestraBanda);
 
-    if (!muestraBanda) {
-        ui->cB_Banda->setCurrentIndex(0);  // Resetear a "M"
+
+        ui->pB_GAltura->setDisabled(muestraBanda);
     }
 }
 
